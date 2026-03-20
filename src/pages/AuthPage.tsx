@@ -8,14 +8,14 @@ import { toast } from "sonner";
 import { Dumbbell, Mail, Lock, ArrowRight, Sparkles } from "lucide-react";
 
 const AuthPage = () => {
-  const { user, loading } = useAuth();
-  
-  if (loading) return null;
-  if (user) return <Navigate to="/" replace />;
+  const { user, loading: authLoading } = useAuth();
   const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [loading, setLoading] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+
+  if (authLoading) return null;
+  if (user) return <Navigate to="/" replace />;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
