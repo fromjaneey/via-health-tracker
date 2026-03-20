@@ -4,7 +4,8 @@ import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { ArrowLeft, ArrowRight, Check, Calendar, Sparkles, Ruler, Weight } from "lucide-react";
+import { ArrowLeft, ArrowRight, Check, Calendar, Sparkles } from "lucide-react";
+import MeasurementsStep from "@/components/onboarding/MeasurementsStep";
 
 type Step = "birthday" | "measurements" | "gender" | "goals" | "frequency" | "equipment" | "targets";
 
@@ -170,43 +171,14 @@ const OnboardingPage = () => {
 
         {/* Height & Weight */}
         {step === "measurements" && (
-          <motion.div key="measurements" {...slideIn} className="space-y-6">
-            <div>
-              <h2 className="text-2xl font-display font-bold text-foreground">Your measurements 📏</h2>
-              <p className="text-sm text-muted-foreground mt-1">Helps us calculate calorie needs and track progress</p>
-            </div>
-            <div className="space-y-4">
-              <div>
-                <label className="text-sm font-display font-semibold text-foreground mb-2 block">Height (cm)</label>
-                <div className="relative">
-                  <Ruler className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                  <input
-                    type="number"
-                    value={heightCm}
-                    onChange={(e) => setHeightCm(e.target.value)}
-                    placeholder="e.g. 165"
-                    className="w-full h-14 pl-10 pr-4 text-base bg-card border border-border rounded-xl focus:outline-none focus:ring-2 focus:ring-ring text-foreground placeholder:text-muted-foreground"
-                  />
-                </div>
-              </div>
-              <div>
-                <label className="text-sm font-display font-semibold text-foreground mb-2 block">Weight (kg)</label>
-                <div className="relative">
-                  <Weight className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                  <input
-                    type="number"
-                    value={weightKg}
-                    onChange={(e) => setWeightKg(e.target.value)}
-                    placeholder="e.g. 62"
-                    className="w-full h-14 pl-10 pr-4 text-base bg-card border border-border rounded-xl focus:outline-none focus:ring-2 focus:ring-ring text-foreground placeholder:text-muted-foreground"
-                  />
-                </div>
-              </div>
-            </div>
-            <Button variant="hero" className="w-full h-12 font-display" onClick={goNext} disabled={!heightCm || !weightKg}>
-              Continue <ArrowRight className="w-4 h-4" />
-            </Button>
-          </motion.div>
+          <MeasurementsStep
+            heightCm={heightCm}
+            weightKg={weightKg}
+            onHeightChange={setHeightCm}
+            onWeightChange={setWeightKg}
+            onNext={goNext}
+            slideIn={slideIn}
+          />
         )}
 
         {/* Gender */}
