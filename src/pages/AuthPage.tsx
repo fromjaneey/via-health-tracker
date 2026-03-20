@@ -118,7 +118,7 @@ const AuthPage = () => {
               className="w-full h-12 font-display text-base"
               disabled={submitting}
             >
-              {loading ? (
+              {submitting ? (
                 <div className="w-5 h-5 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" />
               ) : (
                 <>
