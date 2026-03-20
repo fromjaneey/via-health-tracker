@@ -19,7 +19,7 @@ const AuthPage = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
+    setSubmitting(true);
 
     try {
       if (isLogin) {
@@ -38,7 +38,7 @@ const AuthPage = () => {
     } catch (error: any) {
       toast.error(error.message);
     } finally {
-      setLoading(false);
+      setSubmitting(false);
     }
   };
 
@@ -116,7 +116,7 @@ const AuthPage = () => {
               type="submit"
               variant="hero"
               className="w-full h-12 font-display text-base"
-              disabled={loading}
+              disabled={submitting}
             >
               {loading ? (
                 <div className="w-5 h-5 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" />
