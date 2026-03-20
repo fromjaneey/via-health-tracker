@@ -2,7 +2,7 @@ import { useState } from "react";
 import TabNav from "@/components/TabNav";
 import DashboardPage from "@/components/DashboardPage";
 import WorkoutPage from "@/components/WorkoutPage";
-import RoutineBuilderPage from "@/components/RoutineBuilderPage";
+import MealsPage from "@/components/MealsPage";
 import HealthInsightsPage from "@/components/HealthInsightsPage";
 import ProfilePage from "@/components/ProfilePage";
 
