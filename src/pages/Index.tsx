@@ -15,8 +15,8 @@ const Index = () => {
         return <DashboardPage onNavigate={setActiveTab} />;
       case "workout":
         return <WorkoutPage />;
-      case "routines":
-        return <RoutineBuilderPage />;
+      case "meals":
+        return <MealsPage />;
       case "health":
         return <HealthInsightsPage />;
       case "profile":

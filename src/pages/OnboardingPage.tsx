@@ -4,9 +4,9 @@ import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { ArrowLeft, ArrowRight, Check, Calendar, Sparkles } from "lucide-react";
+import { ArrowLeft, ArrowRight, Check, Calendar, Sparkles, Ruler, Weight } from "lucide-react";
 
-type Step = "birthday" | "gender" | "goals" | "frequency" | "targets";
+type Step = "birthday" | "measurements" | "gender" | "goals" | "frequency" | "equipment" | "targets";
 
 const genderOptions = [
   { id: "woman", label: "Woman", emoji: "👩" },
@@ -40,6 +40,15 @@ const durationOptions = [
   { id: 90, label: "90 min", desc: "Extended" },
 ];
 
+const equipmentOptions = [
+  { id: "full-gym", label: "Full Gym", emoji: "🏋️", desc: "Machines, cables, free weights" },
+  { id: "dumbbells", label: "Dumbbells", emoji: "🏠", desc: "Adjustable or fixed dumbbells" },
+  { id: "resistance-bands", label: "Resistance Bands", emoji: "🪢", desc: "Bands and bodyweight" },
+  { id: "kettlebells", label: "Kettlebells", emoji: "🔔", desc: "Kettlebell training" },
+  { id: "barbell", label: "Barbell & Rack", emoji: "🏗️", desc: "Barbell, plates, squat rack" },
+  { id: "bodyweight", label: "Bodyweight Only", emoji: "🤸", desc: "No equipment needed" },
+];
+
 const targetOptions = [
   { id: "full-body", label: "Full Body", emoji: "🏃‍♀️" },
   { id: "upper-body", label: "Upper Body", emoji: "💪" },
@@ -53,14 +62,17 @@ const OnboardingPage = () => {
   const { user } = useAuth();
   const [step, setStep] = useState<Step>("birthday");
   const [birthday, setBirthday] = useState("");
+  const [heightCm, setHeightCm] = useState("");
+  const [weightKg, setWeightKg] = useState("");
   const [gender, setGender] = useState("");
   const [goals, setGoals] = useState<string[]>([]);
   const [frequency, setFrequency] = useState<number | null>(null);
   const [duration, setDuration] = useState<number | null>(null);
+  const [equipment, setEquipment] = useState<string[]>([]);
   const [targets, setTargets] = useState<string[]>([]);
   const [saving, setSaving] = useState(false);
 
-  const steps: Step[] = ["birthday", "gender", "goals", "frequency", "targets"];
+  const steps: Step[] = ["birthday", "measurements", "gender", "goals", "frequency", "equipment", "targets"];
   const currentIndex = steps.indexOf(step);
   const progress = ((currentIndex + 1) / steps.length) * 100;
 
@@ -81,6 +93,10 @@ const OnboardingPage = () => {
     setTargets((prev) => prev.includes(id) ? prev.filter((t) => t !== id) : [...prev, id]);
   };
 
+  const toggleEquipment = (id: string) => {
+    setEquipment((prev) => prev.includes(id) ? prev.filter((e) => e !== id) : [...prev, id]);
+  };
+
   const handleFinish = async () => {
     if (!user) return;
     setSaving(true);
@@ -89,17 +105,19 @@ const OnboardingPage = () => {
         .from("profiles")
         .update({
           birthday,
+          height_cm: heightCm ? parseFloat(heightCm) : null,
+          weight_kg: weightKg ? parseFloat(weightKg) : null,
           gender,
           goals,
           workout_frequency: frequency,
           workout_duration: duration,
+          equipment,
           target_areas: targets,
           onboarding_completed: true,
         })
         .eq("user_id", user.id);
       if (error) throw error;
       toast.success("You're all set! Let's go 🎉");
-      // Force reload to pick up onboarding_completed change
       window.location.reload();
     } catch (error: any) {
       toast.error(error.message);
@@ -150,6 +168,47 @@ const OnboardingPage = () => {
           </motion.div>
         )}
 
+        {/* Height & Weight */}
+        {step === "measurements" && (
+          <motion.div key="measurements" {...slideIn} className="space-y-6">
+            <div>
+              <h2 className="text-2xl font-display font-bold text-foreground">Your measurements 📏</h2>
+              <p className="text-sm text-muted-foreground mt-1">Helps us calculate calorie needs and track progress</p>
+            </div>
+            <div className="space-y-4">
+              <div>
+                <label className="text-sm font-display font-semibold text-foreground mb-2 block">Height (cm)</label>
+                <div className="relative">
+                  <Ruler className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                  <input
+                    type="number"
+                    value={heightCm}
+                    onChange={(e) => setHeightCm(e.target.value)}
+                    placeholder="e.g. 165"
+                    className="w-full h-14 pl-10 pr-4 text-base bg-card border border-border rounded-xl focus:outline-none focus:ring-2 focus:ring-ring text-foreground placeholder:text-muted-foreground"
+                  />
+                </div>
+              </div>
+              <div>
+                <label className="text-sm font-display font-semibold text-foreground mb-2 block">Weight (kg)</label>
+                <div className="relative">
+                  <Weight className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                  <input
+                    type="number"
+                    value={weightKg}
+                    onChange={(e) => setWeightKg(e.target.value)}
+                    placeholder="e.g. 62"
+                    className="w-full h-14 pl-10 pr-4 text-base bg-card border border-border rounded-xl focus:outline-none focus:ring-2 focus:ring-ring text-foreground placeholder:text-muted-foreground"
+                  />
+                </div>
+              </div>
+            </div>
+            <Button variant="hero" className="w-full h-12 font-display" onClick={goNext} disabled={!heightCm || !weightKg}>
+              Continue <ArrowRight className="w-4 h-4" />
+            </Button>
+          </motion.div>
+        )}
+
         {/* Gender */}
         {step === "gender" && (
           <motion.div key="gender" {...slideIn} className="space-y-6">
@@ -178,7 +237,7 @@ const OnboardingPage = () => {
           </motion.div>
         )}
 
-        {/* Goals - multi select */}
+        {/* Goals */}
         {step === "goals" && (
           <motion.div key="goals" {...slideIn} className="space-y-6">
             <div>
@@ -213,7 +272,6 @@ const OnboardingPage = () => {
               <h2 className="text-2xl font-display font-bold text-foreground">How often & how long? ⏱️</h2>
               <p className="text-sm text-muted-foreground mt-1">We'll build your routine around your schedule</p>
             </div>
-
             <div>
               <p className="text-sm font-display font-semibold text-foreground mb-3">Days per week</p>
               <div className="grid grid-cols-3 gap-2">
@@ -231,7 +289,6 @@ const OnboardingPage = () => {
                 ))}
               </div>
             </div>
-
             <div>
               <p className="text-sm font-display font-semibold text-foreground mb-3">Session length</p>
               <div className="grid grid-cols-3 gap-2">
@@ -249,14 +306,42 @@ const OnboardingPage = () => {
                 ))}
               </div>
             </div>
-
             <Button variant="hero" className="w-full h-12 font-display" onClick={goNext} disabled={!frequency || !duration}>
               Continue <ArrowRight className="w-4 h-4" />
             </Button>
           </motion.div>
         )}
 
-        {/* Target Areas - multi select */}
+        {/* Equipment */}
+        {step === "equipment" && (
+          <motion.div key="equipment" {...slideIn} className="space-y-6">
+            <div>
+              <h2 className="text-2xl font-display font-bold text-foreground">What equipment do you have? 🏋️</h2>
+              <p className="text-sm text-muted-foreground mt-1">Select all that you have access to</p>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              {equipmentOptions.map((opt) => (
+                <button
+                  key={opt.id}
+                  onClick={() => toggleEquipment(opt.id)}
+                  className={`flex flex-col items-center gap-2 p-4 rounded-xl border transition-all ${
+                    equipment.includes(opt.id) ? "border-primary bg-primary/5 ring-1 ring-primary" : "border-border bg-card hover:border-primary/30"
+                  }`}
+                >
+                  <span className="text-3xl">{opt.emoji}</span>
+                  <span className="font-display font-medium text-foreground text-sm">{opt.label}</span>
+                  <span className="text-[10px] text-muted-foreground text-center">{opt.desc}</span>
+                  {equipment.includes(opt.id) && <Check className="w-4 h-4 text-primary" />}
+                </button>
+              ))}
+            </div>
+            <Button variant="hero" className="w-full h-12 font-display" onClick={goNext} disabled={equipment.length === 0}>
+              Continue <ArrowRight className="w-4 h-4" />
+            </Button>
+          </motion.div>
+        )}
+
+        {/* Target Areas */}
         {step === "targets" && (
           <motion.div key="targets" {...slideIn} className="space-y-6">
             <div>

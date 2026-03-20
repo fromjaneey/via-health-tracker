@@ -97,17 +97,17 @@ const DashboardPage = ({ onNavigate }: DashboardPageProps) => {
         </div>
       </motion.div>
 
-      {/* Build Routine CTA */}
+      {/* Meal Tracking CTA */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4, delay: 0.3 }}
         className="bg-card rounded-2xl p-5 border border-border text-center"
       >
-        <h3 className="font-display font-semibold text-foreground mb-2">Need a new routine?</h3>
-        <p className="text-sm text-muted-foreground mb-4">Build a personalized plan based on your goals and equipment</p>
-        <Button variant="outline" className="font-display" onClick={() => onNavigate("routines")}>
-          Build My Routine
+        <h3 className="font-display font-semibold text-foreground mb-2">Track your meals 🥗</h3>
+        <p className="text-sm text-muted-foreground mb-4">Log nutrition and discover high-protein recipes</p>
+        <Button variant="outline" className="font-display" onClick={() => onNavigate("meals")}>
+          Go to Meals
         </Button>
       </motion.div>
     </div>
