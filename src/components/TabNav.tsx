@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Home, Dumbbell, LayoutList, Heart, User } from "lucide-react";
+import { Home, Dumbbell, UtensilsCrossed, Heart, User } from "lucide-react";
 
 interface TabNavProps {
   activeTab: string;
@@ -10,7 +10,7 @@ interface TabNavProps {
 const tabs = [
   { id: "home", label: "Home", icon: Home },
   { id: "workout", label: "Workout", icon: Dumbbell },
-  { id: "routines", label: "Routines", icon: LayoutList },
+  { id: "meals", label: "Meals", icon: UtensilsCrossed },
   { id: "health", label: "Health", icon: Heart },
   { id: "profile", label: "Profile", icon: User },
 ];

@@ -18,39 +18,48 @@ export type Database = {
         Row: {
           birthday: string | null
           created_at: string
+          equipment: string[] | null
           gender: string | null
           goals: string[] | null
+          height_cm: number | null
           id: string
           onboarding_completed: boolean
           target_areas: string[] | null
           updated_at: string
           user_id: string
+          weight_kg: number | null
           workout_duration: number | null
           workout_frequency: number | null
         }
         Insert: {
           birthday?: string | null
           created_at?: string
+          equipment?: string[] | null
           gender?: string | null
           goals?: string[] | null
+          height_cm?: number | null
           id?: string
           onboarding_completed?: boolean
           target_areas?: string[] | null
           updated_at?: string
           user_id: string
+          weight_kg?: number | null
           workout_duration?: number | null
           workout_frequency?: number | null
         }
         Update: {
           birthday?: string | null
           created_at?: string
+          equipment?: string[] | null
           gender?: string | null
           goals?: string[] | null
+          height_cm?: number | null
           id?: string
           onboarding_completed?: boolean
           target_areas?: string[] | null
           updated_at?: string
           user_id?: string
+          weight_kg?: number | null
           workout_duration?: number | null
           workout_frequency?: number | null
         }
