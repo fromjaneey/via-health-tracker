@@ -4,7 +4,8 @@ import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { ArrowLeft, ArrowRight, Check, Calendar, Sparkles, Ruler, Weight } from "lucide-react";
+import { ArrowLeft, ArrowRight, Check, Calendar, Sparkles } from "lucide-react";
+import MeasurementsStep from "@/components/onboarding/MeasurementsStep";
 
 type Step = "birthday" | "measurements" | "gender" | "goals" | "frequency" | "equipment" | "targets";
 
