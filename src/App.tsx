@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Route, Routes, Navigate } from "react-router-dom";
+import { BrowserRouter, Route, Routes, Navigate, useLocation } from "react-router-dom";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -16,18 +16,20 @@ const queryClient = new QueryClient();
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const { user, loading } = useAuth();
   const [onboardingDone, setOnboardingDone] = useState<boolean | null>(null);
+  const location = useLocation();
 
   useEffect(() => {
     if (!user) return;
+    setOnboardingDone(null);
     supabase
       .from("profiles")
       .select("onboarding_completed")
       .eq("user_id", user.id)
-      .single()
+      .maybeSingle()
       .then(({ data }) => {
         setOnboardingDone(data?.onboarding_completed ?? false);
       });
-  }, [user]);
+  }, [user, location.key]);
 
   if (loading) {
     return (
