@@ -7,13 +7,7 @@ import { toast } from "sonner";
 import { ArrowLeft, ArrowRight, Check, Calendar, Sparkles } from "lucide-react";
 import MeasurementsStep from "@/components/onboarding/MeasurementsStep";
 
-type Step = "birthday" | "measurements" | "gender" | "goals" | "frequency" | "equipment" | "targets";
-
-const genderOptions = [
-  { id: "woman", label: "Woman", emoji: "👩" },
-  { id: "non-binary", label: "Non-binary", emoji: "🌈" },
-  { id: "prefer-not-to-say", label: "Prefer not to say", emoji: "🤍" },
-];
+type Step = "birthday" | "measurements" | "goals" | "frequency" | "equipment" | "targets";
 
 const goalOptions = [
   { id: "lose-weight", label: "Lose Weight", emoji: "🔥" },
