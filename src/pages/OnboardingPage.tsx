@@ -56,6 +56,7 @@ const targetOptions = [
 
 const OnboardingPage = () => {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [step, setStep] = useState<Step>("birthday");
   const [birthday, setBirthday] = useState("");
   const [heightCm, setHeightCm] = useState("");
