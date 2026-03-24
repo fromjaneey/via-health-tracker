@@ -14,6 +14,44 @@ export type Database = {
   }
   public: {
     Tables: {
+      medication_logs: {
+        Row: {
+          created_at: string
+          id: string
+          log_date: string
+          medication_id: string
+          notes: string | null
+          taken: boolean
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          log_date?: string
+          medication_id: string
+          notes?: string | null
+          taken?: boolean
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          log_date?: string
+          medication_id?: string
+          notes?: string | null
+          taken?: boolean
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "medication_logs_medication_id_fkey"
+            columns: ["medication_id"]
+            isOneToOne: false
+            referencedRelation: "medications"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       medications: {
         Row: {
           active: boolean
@@ -22,6 +60,7 @@ export type Database = {
           frequency: string
           id: string
           name: string
+          side_effects: string | null
           user_id: string
         }
         Insert: {
@@ -31,6 +70,7 @@ export type Database = {
           frequency: string
           id?: string
           name: string
+          side_effects?: string | null
           user_id: string
         }
         Update: {
@@ -40,6 +80,7 @@ export type Database = {
           frequency?: string
           id?: string
           name?: string
+          side_effects?: string | null
           user_id?: string
         }
         Relationships: []
