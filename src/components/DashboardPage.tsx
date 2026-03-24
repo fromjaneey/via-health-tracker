@@ -1,20 +1,17 @@
-import { Moon, Sun, Droplets, Dumbbell, TrendingUp, Calendar } from "lucide-react";
+import { Moon, Sun, Droplets, Dumbbell, TrendingUp, Calendar, ChevronRight } from "lucide-react";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
+import { useCycleTracking } from "@/hooks/useCycleTracking";
 
 interface DashboardPageProps {
   onNavigate: (tab: string) => void;
 }
 
-const cyclePhases = [
-  { name: "Follicular", color: "bg-primary/20 text-primary", day: "Day 8" },
-  { name: "Ovulation", color: "bg-success/20 text-success", day: "Day 14" },
-  { name: "Luteal", color: "bg-accent/20 text-accent", day: "Day 21" },
-  { name: "Menstrual", color: "bg-rose/20 text-rose", day: "Day 1" },
-];
-
 const DashboardPage = ({ onNavigate }: DashboardPageProps) => {
-  const currentPhase = cyclePhases[0]; // Mock: follicular phase
+  const { cycleInfo, recommendations, loading } = useCycleTracking();
+
+  const phaseName = cycleInfo.currentPhase ?? "Not tracked";
+  const dayLabel = cycleInfo.currentDay ? `Day ${cycleInfo.currentDay}` : "—";
 
   return (
     <div className="px-4 pt-6 pb-24 max-w-lg mx-auto space-y-6">
@@ -40,8 +37,8 @@ const DashboardPage = ({ onNavigate }: DashboardPageProps) => {
           </div>
           <div className="bg-background/15 rounded-xl p-3 text-center">
             <Droplets className="w-5 h-5 mx-auto mb-1" />
-            <p className="text-sm font-display font-semibold">{currentPhase.name}</p>
-            <p className="text-[10px] opacity-80">{currentPhase.day}</p>
+            <p className="text-sm font-display font-semibold">{phaseName}</p>
+            <p className="text-[10px] opacity-80">{dayLabel}</p>
           </div>
           <div className="bg-background/15 rounded-xl p-3 text-center">
             <TrendingUp className="w-5 h-5 mx-auto mb-1" />
@@ -50,6 +47,24 @@ const DashboardPage = ({ onNavigate }: DashboardPageProps) => {
           </div>
         </div>
       </motion.div>
+
+      {/* Phase Training Recommendations */}
+      {recommendations && (
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4, delay: 0.05 }}
+          className="bg-card rounded-2xl p-5 border border-border"
+        >
+          <p className="text-xs font-display font-semibold text-primary mb-2">{recommendations.title}</p>
+          <p className="text-xs text-muted-foreground mb-2">Training recommendations for this phase:</p>
+          <ul className="text-xs text-muted-foreground space-y-1">
+            {recommendations.tips.map((tip, i) => (
+              <li key={i}>• {tip}</li>
+            ))}
+          </ul>
+        </motion.div>
+      )}
 
       {/* Today's Workout */}
       <motion.div

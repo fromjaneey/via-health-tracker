@@ -5,7 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { Dumbbell, Mail, Lock, ArrowRight, Sparkles } from "lucide-react";
+import { Dumbbell, Mail, Lock, ArrowRight, Sparkles, UserRound } from "lucide-react";
 
 const AuthPage = () => {
   const { user, loading: authLoading } = useAuth();
@@ -35,6 +35,19 @@ const AuthPage = () => {
         if (error) throw error;
         toast.success("Account created! Let's set up your profile.");
       }
+    } catch (error: any) {
+      toast.error(error.message);
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleGuestLogin = async () => {
+    setSubmitting(true);
+    try {
+      const { error } = await supabase.auth.signInAnonymously();
+      if (error) throw error;
+      toast.success("Welcome! You're browsing as a guest.");
     } catch (error: any) {
       toast.error(error.message);
     } finally {
@@ -129,6 +142,24 @@ const AuthPage = () => {
             </Button>
           </motion.form>
         </AnimatePresence>
+
+        {/* Divider */}
+        <div className="flex items-center gap-3">
+          <div className="flex-1 h-px bg-border" />
+          <span className="text-xs text-muted-foreground">or</span>
+          <div className="flex-1 h-px bg-border" />
+        </div>
+
+        {/* Guest button */}
+        <Button
+          variant="outline"
+          className="w-full h-12 font-display text-sm"
+          onClick={handleGuestLogin}
+          disabled={submitting}
+        >
+          <UserRound className="w-4 h-4 mr-2" />
+          Continue as Guest
+        </Button>
 
         {!isLogin && (
           <motion.div
