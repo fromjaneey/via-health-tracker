@@ -67,7 +67,7 @@ const OnboardingPage = () => {
   const [targets, setTargets] = useState<string[]>([]);
   const [saving, setSaving] = useState(false);
 
-  const steps: Step[] = ["birthday", "measurements", "gender", "goals", "frequency", "equipment", "targets"];
+  const steps: Step[] = ["birthday", "measurements", "goals", "frequency", "equipment", "targets"];
   const currentIndex = steps.indexOf(step);
   const progress = ((currentIndex + 1) / steps.length) * 100;
 
