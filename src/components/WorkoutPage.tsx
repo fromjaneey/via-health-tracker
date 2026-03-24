@@ -90,6 +90,10 @@ const WorkoutPage = () => {
     );
   };
 
+  const handleRemove = (index: number) => {
+    setExercises((prev) => prev.filter((_, i) => i !== index));
+  };
+
   const handleToggleSet = (exerciseIndex: number, setIndex: number) => {
     setExercises((prev) =>
       prev.map((ex, i) =>
