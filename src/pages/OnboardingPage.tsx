@@ -115,7 +115,7 @@ const OnboardingPage = () => {
         }, { onConflict: "user_id" });
       if (error) throw error;
       toast.success("You're all set! Let's go 🎉");
-      window.location.reload();
+      navigate("/", { replace: true });
     } catch (error: any) {
       toast.error(error.message);
     } finally {
