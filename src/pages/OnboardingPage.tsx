@@ -96,21 +96,21 @@ const OnboardingPage = () => {
     if (!user) return;
     setSaving(true);
     try {
+      // Use upsert to handle both existing profiles (email signup) and missing profiles (guest mode)
       const { error } = await supabase
         .from("profiles")
-        .update({
+        .upsert({
+          user_id: user.id,
           birthday,
           height_cm: heightCm ? parseFloat(heightCm) : null,
           weight_kg: weightKg ? parseFloat(weightKg) : null,
-          
           goals,
           workout_frequency: frequency,
           workout_duration: duration,
           equipment,
           target_areas: targets,
           onboarding_completed: true,
-        })
-        .eq("user_id", user.id);
+        }, { onConflict: "user_id" });
       if (error) throw error;
       toast.success("You're all set! Let's go 🎉");
       window.location.reload();
