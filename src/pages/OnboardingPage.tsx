@@ -102,7 +102,7 @@ const OnboardingPage = () => {
           birthday,
           height_cm: heightCm ? parseFloat(heightCm) : null,
           weight_kg: weightKg ? parseFloat(weightKg) : null,
-          gender,
+          
           goals,
           workout_frequency: frequency,
           workout_duration: duration,
