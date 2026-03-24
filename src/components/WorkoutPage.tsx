@@ -90,6 +90,10 @@ const WorkoutPage = () => {
     );
   };
 
+  const handleRemove = (index: number) => {
+    setExercises((prev) => prev.filter((_, i) => i !== index));
+  };
+
   const handleToggleSet = (exerciseIndex: number, setIndex: number) => {
     setExercises((prev) =>
       prev.map((ex, i) =>
@@ -233,6 +237,7 @@ const WorkoutPage = () => {
                 sets={ex.sets}
                 userEquipment={userEquipment}
                 onSwapExercise={(newEx) => handleSwap(originalIndex, newEx)}
+                onRemoveExercise={() => handleRemove(originalIndex)}
                 onToggleSet={(si) => handleToggleSet(originalIndex, si)}
                 onUpdateSet={(si, field, val) => handleUpdateSet(originalIndex, si, field, val)}
               />
