@@ -175,34 +175,6 @@ const OnboardingPage = () => {
           />
         )}
 
-        {/* Gender */}
-        {step === "gender" && (
-          <motion.div key="gender" {...slideIn} className="space-y-6">
-            <div>
-              <h2 className="text-2xl font-display font-bold text-foreground">How do you identify?</h2>
-              <p className="text-sm text-muted-foreground mt-1">Helps us customize cycle and health tracking</p>
-            </div>
-            <div className="space-y-3">
-              {genderOptions.map((opt) => (
-                <button
-                  key={opt.id}
-                  onClick={() => setGender(opt.id)}
-                  className={`w-full flex items-center gap-3 p-4 rounded-xl border transition-all text-left ${
-                    gender === opt.id ? "border-primary bg-primary/5 ring-1 ring-primary" : "border-border bg-card hover:border-primary/30"
-                  }`}
-                >
-                  <span className="text-2xl">{opt.emoji}</span>
-                  <span className="font-display font-medium text-foreground">{opt.label}</span>
-                  {gender === opt.id && <Check className="w-5 h-5 text-primary ml-auto" />}
-                </button>
-              ))}
-            </div>
-            <Button variant="hero" className="w-full h-12 font-display" onClick={goNext} disabled={!gender}>
-              Continue <ArrowRight className="w-4 h-4" />
-            </Button>
-          </motion.div>
-        )}
-
         {/* Goals */}
         {step === "goals" && (
           <motion.div key="goals" {...slideIn} className="space-y-6">
