@@ -1,8 +1,17 @@
 import { motion } from "framer-motion";
-import { User, Settings, TrendingUp, Award, Calendar, ChevronRight } from "lucide-react";
+import { User, Settings, TrendingUp, Award, Calendar, ChevronRight, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useAuth } from "@/contexts/AuthContext";
+import { toast } from "sonner";
 
 const ProfilePage = () => {
+  const { signOut } = useAuth();
+
+  const handleSignOut = async () => {
+    await signOut();
+    toast.success("Signed out successfully");
+  };
+
   return (
     <div className="px-4 pt-6 pb-24 max-w-lg mx-auto space-y-6">
       {/* Profile Header */}
@@ -69,6 +78,22 @@ const ProfilePage = () => {
             </button>
           );
         })}
+      </motion.div>
+
+      {/* Sign Out Button */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.3 }}
+      >
+        <Button
+          variant="outline"
+          className="w-full h-12 font-display text-destructive border-destructive/30 hover:bg-destructive/5"
+          onClick={handleSignOut}
+        >
+          <LogOut className="w-4 h-4 mr-2" />
+          Sign Out
+        </Button>
       </motion.div>
     </div>
   );
