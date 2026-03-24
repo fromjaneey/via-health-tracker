@@ -54,8 +54,8 @@ const AuthPage = () => {
           <div className="w-16 h-16 gradient-primary rounded-2xl flex items-center justify-center mx-auto shadow-lg">
             <Dumbbell className="w-8 h-8 text-primary-foreground" />
           </div>
-          <h1 className="text-3xl font-display font-bold text-foreground">FemFit</h1>
-          <p className="text-muted-foreground text-sm">Your personal fitness companion</p>
+          <h1 className="text-3xl font-display font-bold text-foreground">Via</h1>
+          <p className="text-muted-foreground text-sm">Women's Health and Wellness</p>
         </div>
 
         {/* Toggle */}
