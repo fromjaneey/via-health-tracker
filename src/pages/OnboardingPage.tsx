@@ -7,13 +7,7 @@ import { toast } from "sonner";
 import { ArrowLeft, ArrowRight, Check, Calendar, Sparkles } from "lucide-react";
 import MeasurementsStep from "@/components/onboarding/MeasurementsStep";
 
-type Step = "birthday" | "measurements" | "gender" | "goals" | "frequency" | "equipment" | "targets";
-
-const genderOptions = [
-  { id: "woman", label: "Woman", emoji: "👩" },
-  { id: "non-binary", label: "Non-binary", emoji: "🌈" },
-  { id: "prefer-not-to-say", label: "Prefer not to say", emoji: "🤍" },
-];
+type Step = "birthday" | "measurements" | "goals" | "frequency" | "equipment" | "targets";
 
 const goalOptions = [
   { id: "lose-weight", label: "Lose Weight", emoji: "🔥" },
@@ -65,7 +59,7 @@ const OnboardingPage = () => {
   const [birthday, setBirthday] = useState("");
   const [heightCm, setHeightCm] = useState("");
   const [weightKg, setWeightKg] = useState("");
-  const [gender, setGender] = useState("");
+  
   const [goals, setGoals] = useState<string[]>([]);
   const [frequency, setFrequency] = useState<number | null>(null);
   const [duration, setDuration] = useState<number | null>(null);
@@ -73,7 +67,7 @@ const OnboardingPage = () => {
   const [targets, setTargets] = useState<string[]>([]);
   const [saving, setSaving] = useState(false);
 
-  const steps: Step[] = ["birthday", "measurements", "gender", "goals", "frequency", "equipment", "targets"];
+  const steps: Step[] = ["birthday", "measurements", "goals", "frequency", "equipment", "targets"];
   const currentIndex = steps.indexOf(step);
   const progress = ((currentIndex + 1) / steps.length) * 100;
 
@@ -108,7 +102,7 @@ const OnboardingPage = () => {
           birthday,
           height_cm: heightCm ? parseFloat(heightCm) : null,
           weight_kg: weightKg ? parseFloat(weightKg) : null,
-          gender,
+          
           goals,
           workout_frequency: frequency,
           workout_duration: duration,
@@ -179,34 +173,6 @@ const OnboardingPage = () => {
             onNext={goNext}
             slideIn={slideIn}
           />
-        )}
-
-        {/* Gender */}
-        {step === "gender" && (
-          <motion.div key="gender" {...slideIn} className="space-y-6">
-            <div>
-              <h2 className="text-2xl font-display font-bold text-foreground">How do you identify?</h2>
-              <p className="text-sm text-muted-foreground mt-1">Helps us customize cycle and health tracking</p>
-            </div>
-            <div className="space-y-3">
-              {genderOptions.map((opt) => (
-                <button
-                  key={opt.id}
-                  onClick={() => setGender(opt.id)}
-                  className={`w-full flex items-center gap-3 p-4 rounded-xl border transition-all text-left ${
-                    gender === opt.id ? "border-primary bg-primary/5 ring-1 ring-primary" : "border-border bg-card hover:border-primary/30"
-                  }`}
-                >
-                  <span className="text-2xl">{opt.emoji}</span>
-                  <span className="font-display font-medium text-foreground">{opt.label}</span>
-                  {gender === opt.id && <Check className="w-5 h-5 text-primary ml-auto" />}
-                </button>
-              ))}
-            </div>
-            <Button variant="hero" className="w-full h-12 font-display" onClick={goNext} disabled={!gender}>
-              Continue <ArrowRight className="w-4 h-4" />
-            </Button>
-          </motion.div>
         )}
 
         {/* Goals */}
