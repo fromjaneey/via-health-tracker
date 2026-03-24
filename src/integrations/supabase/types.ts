@@ -14,6 +14,66 @@ export type Database = {
   }
   public: {
     Tables: {
+      medications: {
+        Row: {
+          active: boolean
+          amount: string
+          created_at: string
+          frequency: string
+          id: string
+          name: string
+          user_id: string
+        }
+        Insert: {
+          active?: boolean
+          amount: string
+          created_at?: string
+          frequency: string
+          id?: string
+          name: string
+          user_id: string
+        }
+        Update: {
+          active?: boolean
+          amount?: string
+          created_at?: string
+          frequency?: string
+          id?: string
+          name?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      menopause_symptoms: {
+        Row: {
+          created_at: string
+          id: string
+          intensity: number
+          log_date: string
+          notes: string | null
+          symptom: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          intensity: number
+          log_date?: string
+          notes?: string | null
+          symptom: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          intensity?: number
+          log_date?: string
+          notes?: string | null
+          symptom?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           birthday: string | null
