@@ -59,7 +59,7 @@ const OnboardingPage = () => {
   const [birthday, setBirthday] = useState("");
   const [heightCm, setHeightCm] = useState("");
   const [weightKg, setWeightKg] = useState("");
-  const [gender, setGender] = useState("");
+  
   const [goals, setGoals] = useState<string[]>([]);
   const [frequency, setFrequency] = useState<number | null>(null);
   const [duration, setDuration] = useState<number | null>(null);
