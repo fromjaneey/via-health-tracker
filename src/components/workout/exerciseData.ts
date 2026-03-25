@@ -183,3 +183,63 @@ export function getAlternatives(exercise: ExerciseData, userEquipment: string[])
     (ex) => ex.bodyArea === exercise.bodyArea && ex.id !== exercise.id
   );
 }
+
+// Map onboarding target areas to exercise body areas
+const targetAreaToBodyArea: Record<string, string[]> = {
+  "Upper Body": ["chest", "shoulders", "back", "arms"],
+  "Core": ["core"],
+  "Glutes": ["glutes"],
+  "Legs": ["legs"],
+  "Full Body": ["chest", "shoulders", "back", "arms", "legs", "glutes", "core"],
+};
+
+export function generateWorkoutFromProfile(
+  equipment: string[],
+  targetAreas: string[],
+  goals: string[],
+  durationMinutes: number = 30
+): ExerciseData[] {
+  const available = getExercisesForEquipment(equipment);
+
+  // Determine which body areas to focus on
+  const focusAreas = new Set<string>();
+  if (!targetAreas.length) {
+    // Default to full body
+    ["chest", "shoulders", "back", "arms", "legs", "glutes", "core"].forEach(a => focusAreas.add(a));
+  } else {
+    targetAreas.forEach(ta => {
+      const mapped = targetAreaToBodyArea[ta];
+      if (mapped) mapped.forEach(a => focusAreas.add(a));
+      else focusAreas.add(ta.toLowerCase());
+    });
+  }
+
+  // Filter to focus areas
+  const candidates = available.filter(ex => focusAreas.has(ex.bodyArea));
+
+  // Estimate ~4 min per exercise (including rest), pick exercises to fill duration
+  const maxExercises = Math.max(3, Math.min(Math.floor(durationMinutes / 4), 10));
+
+  // Pick exercises: prioritize variety across body areas
+  const picked: ExerciseData[] = [];
+  const areasArray = Array.from(focusAreas);
+  let areaIndex = 0;
+
+  // Round-robin across areas
+  const usedIds = new Set<string>();
+  for (let round = 0; picked.length < maxExercises && round < 5; round++) {
+    for (let i = 0; i < areasArray.length && picked.length < maxExercises; i++) {
+      const area = areasArray[(areaIndex + i) % areasArray.length];
+      const areaExercises = candidates.filter(ex => ex.bodyArea === area && !usedIds.has(ex.id));
+      if (areaExercises.length > 0) {
+        // Pick a random one from this area
+        const pick = areaExercises[Math.floor(Math.random() * areaExercises.length)];
+        picked.push(pick);
+        usedIds.add(pick.id);
+      }
+    }
+    areaIndex += areasArray.length;
+  }
+
+  return picked;
+}

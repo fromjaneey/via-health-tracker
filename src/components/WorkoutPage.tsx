@@ -10,6 +10,7 @@ import {
   ExerciseData,
   exerciseDatabase,
   getExercisesForEquipment,
+  generateWorkoutFromProfile,
   bodyAreas,
 } from "./workout/exerciseData";
 
