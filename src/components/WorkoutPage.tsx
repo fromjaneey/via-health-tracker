@@ -10,6 +10,7 @@ import {
   ExerciseData,
   exerciseDatabase,
   getExercisesForEquipment,
+  generateWorkoutFromProfile,
   bodyAreas,
 } from "./workout/exerciseData";
 
@@ -48,21 +49,37 @@ const WorkoutPage = () => {
     { id: "bodyweight", label: "Bodyweight", emoji: "🤸" },
   ];
 
-  // Load user equipment
+  // Load user profile and generate workout
   useEffect(() => {
     if (!user) return;
     const load = async () => {
       const { data } = await supabase
         .from("profiles")
-        .select("equipment")
+        .select("equipment, target_areas, goals, workout_duration")
         .eq("user_id", user.id)
         .single();
-      if (data?.equipment) {
-        setUserEquipment(data.equipment);
+      if (data) {
+        const eq = data.equipment ?? [];
+        setUserEquipment(eq);
+        // Auto-generate a workout if none active
+        if (exercises.length === 0) {
+          const generated = generateWorkoutFromProfile(
+            eq,
+            data.target_areas ?? [],
+            data.goals ?? [],
+            data.workout_duration ?? 30
+          );
+          setExercises(
+            generated.map((ex) => ({
+              data: ex,
+              sets: ex.defaultSets.map((s) => ({ ...s, completed: false })),
+            }))
+          );
+        }
       }
     };
     load();
-  }, [user]);
+  }, [user]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Load workout history
   useEffect(() => {
