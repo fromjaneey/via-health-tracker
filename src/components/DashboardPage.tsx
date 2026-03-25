@@ -1,21 +1,51 @@
-import { Moon, Sun, Droplets, Dumbbell, TrendingUp, Calendar, ChevronRight } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Droplets, Dumbbell, TrendingUp, Calendar } from "lucide-react";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { useCycleTracking } from "@/hooks/useCycleTracking";
+import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
 
 interface DashboardPageProps {
   onNavigate: (tab: string) => void;
 }
 
 const DashboardPage = ({ onNavigate }: DashboardPageProps) => {
+  const { user } = useAuth();
   const { cycleInfo, recommendations, loading } = useCycleTracking();
+  const [workoutCount, setWorkoutCount] = useState(0);
+  const [latestWorkout, setLatestWorkout] = useState<any>(null);
 
   const phaseName = cycleInfo.currentPhase ?? "Not tracked";
   const dayLabel = cycleInfo.currentDay ? `Day ${cycleInfo.currentDay}` : "—";
 
+  useEffect(() => {
+    if (!user) return;
+    const loadStats = async () => {
+      // Count workouts this week
+      const weekAgo = new Date();
+      weekAgo.setDate(weekAgo.getDate() - 7);
+      const { count } = await supabase
+        .from("workout_history")
+        .select("*", { count: "exact", head: true })
+        .eq("user_id", user.id)
+        .gte("completed_at", weekAgo.toISOString());
+      setWorkoutCount(count ?? 0);
+
+      // Get latest workout
+      const { data } = await supabase
+        .from("workout_history")
+        .select("*")
+        .eq("user_id", user.id)
+        .order("completed_at", { ascending: false })
+        .limit(1);
+      if (data && data.length > 0) setLatestWorkout(data[0]);
+    };
+    loadStats();
+  }, [user]);
+
   return (
     <div className="px-4 pt-6 pb-24 max-w-lg mx-auto space-y-6">
-      {/* Header */}
       <div>
         <p className="text-muted-foreground text-sm">Good morning,</p>
         <h1 className="text-2xl font-display font-semibold text-foreground">Welcome back 💪</h1>
@@ -29,12 +59,7 @@ const DashboardPage = ({ onNavigate }: DashboardPageProps) => {
         className="gradient-primary rounded-2xl p-5 text-primary-foreground"
       >
         <h2 className="font-display font-semibold text-lg mb-3">Daily Pulse</h2>
-        <div className="grid grid-cols-3 gap-3">
-          <div className="bg-background/15 rounded-xl p-3 text-center">
-            <Moon className="w-5 h-5 mx-auto mb-1" />
-            <p className="text-xl font-display font-semibold">7.5</p>
-            <p className="text-[10px] opacity-80">Sleep Score</p>
-          </div>
+        <div className="grid grid-cols-2 gap-3">
           <div className="bg-background/15 rounded-xl p-3 text-center">
             <Droplets className="w-5 h-5 mx-auto mb-1" />
             <p className="text-sm font-display font-semibold">{phaseName}</p>
@@ -42,8 +67,8 @@ const DashboardPage = ({ onNavigate }: DashboardPageProps) => {
           </div>
           <div className="bg-background/15 rounded-xl p-3 text-center">
             <TrendingUp className="w-5 h-5 mx-auto mb-1" />
-            <p className="text-xl font-display font-semibold">3</p>
-            <p className="text-[10px] opacity-80">Day Streak</p>
+            <p className="text-xl font-display font-semibold">{workoutCount}</p>
+            <p className="text-[10px] opacity-80">Workouts this week</p>
           </div>
         </div>
       </motion.div>
@@ -66,7 +91,7 @@ const DashboardPage = ({ onNavigate }: DashboardPageProps) => {
         </motion.div>
       )}
 
-      {/* Today's Workout */}
+      {/* Start Workout CTA */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -74,20 +99,27 @@ const DashboardPage = ({ onNavigate }: DashboardPageProps) => {
         className="bg-card rounded-2xl p-5 border border-border"
       >
         <div className="flex items-center justify-between mb-3">
-          <h3 className="font-display font-semibold text-foreground">Today's Workout</h3>
+          <h3 className="font-display font-semibold text-foreground">Ready to train?</h3>
           <span className="text-xs text-muted-foreground flex items-center gap-1">
-            <Calendar className="w-3.5 h-3.5" /> Upper Body
+            <Calendar className="w-3.5 h-3.5" /> Today
           </span>
         </div>
-        <div className="space-y-2 mb-4">
-          {["Dumbbell Bench Press", "Seated Row", "Shoulder Press", "Bicep Curls"].map((ex, i) => (
-            <div key={i} className="flex items-center gap-3 text-sm">
-              <Dumbbell className="w-4 h-4 text-primary" />
-              <span className="text-foreground">{ex}</span>
-              <span className="text-muted-foreground ml-auto text-xs">3 × 12</span>
+        {latestWorkout ? (
+          <div className="mb-4">
+            <p className="text-xs text-muted-foreground mb-2">Last workout:</p>
+            <div className="space-y-1">
+              {(latestWorkout.exercises as any[]).slice(0, 4).map((ex: any, i: number) => (
+                <div key={i} className="flex items-center gap-3 text-sm">
+                  <Dumbbell className="w-4 h-4 text-primary" />
+                  <span className="text-foreground">{ex.name}</span>
+                  <span className="text-muted-foreground ml-auto text-xs">{ex.sets?.length} sets</span>
+                </div>
+              ))}
             </div>
-          ))}
-        </div>
+          </div>
+        ) : (
+          <p className="text-sm text-muted-foreground mb-4">Start your first workout to track progress</p>
+        )}
         <Button variant="hero" className="w-full h-12 text-base font-display" onClick={() => onNavigate("workout")}>
           Start Workout
         </Button>
@@ -102,28 +134,14 @@ const DashboardPage = ({ onNavigate }: DashboardPageProps) => {
       >
         <div className="bg-card rounded-2xl p-4 border border-border">
           <p className="text-muted-foreground text-xs mb-1">This Week</p>
-          <p className="text-2xl font-display font-semibold text-foreground">4</p>
+          <p className="text-2xl font-display font-semibold text-foreground">{workoutCount}</p>
           <p className="text-xs text-success">workouts completed</p>
         </div>
-        <div className="bg-card rounded-2xl p-4 border border-border">
-          <p className="text-muted-foreground text-xs mb-1">Personal Best</p>
-          <p className="text-2xl font-display font-semibold text-foreground">65 kg</p>
-          <p className="text-xs text-primary">Hip Thrust</p>
+        <div className="bg-card rounded-2xl p-4 border border-border cursor-pointer" onClick={() => onNavigate("meals")}>
+          <p className="text-muted-foreground text-xs mb-1">Nutrition</p>
+          <p className="text-lg font-display font-semibold text-foreground">🥗</p>
+          <p className="text-xs text-primary">Track meals →</p>
         </div>
-      </motion.div>
-
-      {/* Meal Tracking CTA */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.4, delay: 0.3 }}
-        className="bg-card rounded-2xl p-5 border border-border text-center"
-      >
-        <h3 className="font-display font-semibold text-foreground mb-2">Track your meals 🥗</h3>
-        <p className="text-sm text-muted-foreground mb-4">Log nutrition and discover high-protein recipes</p>
-        <Button variant="outline" className="font-display" onClick={() => onNavigate("meals")}>
-          Go to Meals
-        </Button>
       </motion.div>
     </div>
   );

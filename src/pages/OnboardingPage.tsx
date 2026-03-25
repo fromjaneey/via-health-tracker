@@ -14,10 +14,6 @@ const goalOptions = [
   { id: "lose-weight", label: "Lose Weight", emoji: "🔥" },
   { id: "build-muscle", label: "Build Muscle", emoji: "💪" },
   { id: "tone-up", label: "Tone & Define", emoji: "✨" },
-  { id: "get-stronger", label: "Get Stronger", emoji: "🏋️" },
-  { id: "improve-endurance", label: "Improve Endurance", emoji: "🫀" },
-  { id: "flexibility", label: "Improve Flexibility", emoji: "🧘" },
-  { id: "stress-relief", label: "Stress Relief", emoji: "🧠" },
 ];
 
 const frequencyOptions = [
