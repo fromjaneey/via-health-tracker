@@ -551,6 +551,29 @@ const WorkoutPage = () => {
         </motion.div>
       )}
 
+      {/* Progress Tracker */}
+      <div className="mt-8">
+        <button
+          onClick={() => setShowProgress(!showProgress)}
+          className="flex items-center justify-between w-full mb-3"
+        >
+          <h2 className="font-display font-semibold text-foreground text-base">Progress & Stats</h2>
+          {showProgress ? <ChevronUp className="w-4 h-4 text-muted-foreground" /> : <ChevronDown className="w-4 h-4 text-muted-foreground" />}
+        </button>
+        <AnimatePresence>
+          {showProgress && (
+            <motion.div
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: "auto", opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              className="overflow-hidden"
+            >
+              <WorkoutProgressTracker history={history} />
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+
       {/* Workout History Calendar */}
       <div className="mt-8">
         <button
