@@ -39,6 +39,8 @@ const WorkoutPage = () => {
   const [addFilterArea, setAddFilterArea] = useState("all");
   const [history, setHistory] = useState<WorkoutRecord[]>([]);
   const [showHistory, setShowHistory] = useState(false);
+  const [calendarMonth, setCalendarMonth] = useState(new Date());
+  const [selectedDay, setSelectedDay] = useState<Date | null>(null);
   const [workoutStartTime] = useState<Date>(new Date());
 
   const equipmentOptions = [
