@@ -27,6 +27,130 @@ interface WorkoutRecord {
   duration_minutes: number | null;
 }
 
+const WorkoutCalendar = ({
+  history,
+  calendarMonth,
+  setCalendarMonth,
+  selectedDay,
+  setSelectedDay,
+}: {
+  history: WorkoutRecord[];
+  calendarMonth: Date;
+  setCalendarMonth: (d: Date) => void;
+  selectedDay: Date | null;
+  setSelectedDay: (d: Date | null) => void;
+}) => {
+  const monthStart = startOfMonth(calendarMonth);
+  const monthEnd = endOfMonth(calendarMonth);
+  const calStart = startOfWeek(monthStart);
+  const calEnd = endOfWeek(monthEnd);
+  const days = eachDayOfInterval({ start: calStart, end: calEnd });
+
+  const workoutDays = useMemo(() => {
+    const map = new Map<string, WorkoutRecord[]>();
+    history.forEach((r) => {
+      const key = format(new Date(r.completed_at), "yyyy-MM-dd");
+      if (!map.has(key)) map.set(key, []);
+      map.get(key)!.push(r);
+    });
+    return map;
+  }, [history]);
+
+  const selectedRecords = selectedDay
+    ? workoutDays.get(format(selectedDay, "yyyy-MM-dd")) ?? []
+    : [];
+
+  return (
+    <div className="space-y-3">
+      <div className="flex items-center justify-between bg-card rounded-xl border border-border px-4 py-3">
+        <button onClick={() => setCalendarMonth(subMonths(calendarMonth, 1))}>
+          <ChevronLeft className="w-4 h-4 text-muted-foreground" />
+        </button>
+        <span className="font-display font-semibold text-sm text-foreground">
+          {format(calendarMonth, "MMMM yyyy")}
+        </span>
+        <button onClick={() => setCalendarMonth(addMonths(calendarMonth, 1))}>
+          <ChevronRight className="w-4 h-4 text-muted-foreground" />
+        </button>
+      </div>
+
+      <div className="bg-card rounded-xl border border-border p-3">
+        <div className="grid grid-cols-7 gap-1 mb-1">
+          {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((d) => (
+            <div key={d} className="text-[10px] text-muted-foreground text-center font-medium py-1">{d}</div>
+          ))}
+        </div>
+        <div className="grid grid-cols-7 gap-1">
+          {days.map((day) => {
+            const key = format(day, "yyyy-MM-dd");
+            const hasWorkout = workoutDays.has(key);
+            const isSelected = selectedDay && isSameDay(day, selectedDay);
+            const isCurrentMonth = isSameMonth(day, calendarMonth);
+            const isToday = isSameDay(day, new Date());
+
+            return (
+              <button
+                key={key}
+                onClick={() => setSelectedDay(isSelected ? null : day)}
+                className={`relative aspect-square flex items-center justify-center rounded-lg text-xs transition-all ${
+                  !isCurrentMonth
+                    ? "text-muted-foreground/30"
+                    : isSelected
+                    ? "bg-primary text-primary-foreground font-bold"
+                    : isToday
+                    ? "bg-primary/10 text-primary font-semibold"
+                    : "text-foreground hover:bg-muted"
+                }`}
+              >
+                {format(day, "d")}
+                {hasWorkout && !isSelected && (
+                  <span className="absolute bottom-0.5 left-1/2 -translate-x-1/2 w-1.5 h-1.5 rounded-full bg-primary" />
+                )}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      <AnimatePresence>
+        {selectedDay && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            className="overflow-hidden space-y-2"
+          >
+            <p className="font-display font-medium text-sm text-foreground">
+              {format(selectedDay, "EEEE, MMM d")}
+            </p>
+            {selectedRecords.length === 0 ? (
+              <p className="text-xs text-muted-foreground py-3 text-center">No workout on this day</p>
+            ) : (
+              selectedRecords.map((record) => (
+                <div key={record.id} className="bg-muted/50 rounded-xl p-3 space-y-1.5">
+                  {record.duration_minutes && (
+                    <span className="text-[11px] text-muted-foreground flex items-center gap-1">
+                      <Clock className="w-3 h-3" /> {record.duration_minutes} min
+                    </span>
+                  )}
+                  {(record.exercises as any[]).map((ex: any, i: number) => (
+                    <div key={i} className="flex items-center justify-between text-xs">
+                      <span className="text-foreground font-medium">{ex.name}</span>
+                      <span className="text-muted-foreground">
+                        {ex.sets?.length} sets · {ex.sets?.map((s: any) => `${s.weight}×${s.reps}`).join(", ")}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              ))
+            )}
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+};
+
 const WorkoutPage = () => {
   const { user } = useAuth();
   const [userEquipment, setUserEquipment] = useState<string[]>([]);
