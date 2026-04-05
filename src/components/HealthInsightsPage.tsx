@@ -192,7 +192,7 @@ const HealthInsightsPage = () => {
         {([
           { key: "calendar", icon: CalendarIcon, label: "Menopause" },
           { key: "cycle", icon: Droplets, label: "Cycle" },
-          { key: "sleep", icon: Moon, label: "Sleep" },
+          // { key: "sleep", icon: Moon, label: "Sleep" }, // Hidden for now
         ] as const).map(({ key, icon: Icon, label }) => (
           <button key={key} onClick={() => setActiveSection(key)}
             className={`flex-1 py-2 text-xs font-display font-medium rounded-lg transition-all flex items-center justify-center gap-1.5 ${activeSection === key ? "bg-background text-foreground shadow-sm" : "text-muted-foreground"}`}>
