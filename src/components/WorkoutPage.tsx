@@ -265,15 +265,15 @@ const WorkoutPage = () => {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/50 z-50 flex items-end justify-center"
+            className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4"
             onClick={(e) => { if (e.target === e.currentTarget) setShowAddExercise(false); }}
           >
             <motion.div
-              initial={{ y: "100%" }}
-              animate={{ y: 0 }}
-              exit={{ y: "100%" }}
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
               transition={{ type: "spring", damping: 25 }}
-              className="bg-background rounded-t-2xl w-full max-w-lg max-h-[80vh] flex flex-col"
+              className="bg-background rounded-2xl w-full max-w-lg max-h-[80vh] flex flex-col"
             >
               <div className="p-4 border-b border-border flex items-center justify-between">
                 <h3 className="font-display font-semibold text-foreground">Add Exercise</h3>
