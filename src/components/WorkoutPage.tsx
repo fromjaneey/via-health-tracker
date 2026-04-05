@@ -426,7 +426,7 @@ const WorkoutPage = () => {
         </motion.div>
       )}
 
-      {/* Workout History */}
+      {/* Workout History Calendar */}
       <div className="mt-8">
         <button
           onClick={() => setShowHistory(!showHistory)}
@@ -442,36 +442,15 @@ const WorkoutPage = () => {
               initial={{ height: 0, opacity: 0 }}
               animate={{ height: "auto", opacity: 1 }}
               exit={{ height: 0, opacity: 0 }}
-              className="overflow-hidden space-y-3"
+              className="overflow-hidden"
             >
-              {history.length === 0 ? (
-                <p className="text-sm text-muted-foreground text-center py-6">No workouts recorded yet</p>
-              ) : (
-                history.map((record) => (
-                  <div key={record.id} className="bg-card rounded-xl border border-border p-4">
-                    <div className="flex items-center justify-between mb-2">
-                      <p className="font-display font-medium text-sm text-foreground">
-                        {new Date(record.completed_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
-                      </p>
-                      {record.duration_minutes && (
-                        <span className="text-xs text-muted-foreground flex items-center gap-1">
-                          <Clock className="w-3 h-3" /> {record.duration_minutes} min
-                        </span>
-                      )}
-                    </div>
-                    <div className="space-y-1">
-                      {(record.exercises as any[]).map((ex: any, i: number) => (
-                        <div key={i} className="flex items-center justify-between text-xs">
-                          <span className="text-foreground">{ex.name}</span>
-                          <span className="text-muted-foreground">
-                            {ex.sets?.length} sets · {ex.sets?.map((s: any) => `${s.weight}×${s.reps}`).join(", ")}
-                          </span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                ))
-              )}
+              <WorkoutCalendar
+                history={history}
+                calendarMonth={calendarMonth}
+                setCalendarMonth={setCalendarMonth}
+                selectedDay={selectedDay}
+                setSelectedDay={setSelectedDay}
+              />
             </motion.div>
           )}
         </AnimatePresence>
