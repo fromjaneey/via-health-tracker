@@ -186,11 +186,12 @@ export function getAlternatives(exercise: ExerciseData, userEquipment: string[])
 
 // Map onboarding target areas to exercise body areas
 const targetAreaToBodyArea: Record<string, string[]> = {
-  "Upper Body": ["chest", "shoulders", "back", "arms"],
-  "Core": ["core"],
-  "Glutes": ["glutes"],
-  "Legs": ["legs"],
-  "Full Body": ["chest", "shoulders", "back", "arms", "legs", "glutes", "core"],
+  "full-body": ["chest", "shoulders", "back", "arms", "legs", "glutes", "core"],
+  "upper-body": ["chest", "shoulders", "back", "arms"],
+  "lower-body": ["legs", "glutes"],
+  "core": ["core"],
+  "glutes": ["glutes"],
+  "back": ["back"],
 };
 
 export function generateWorkoutFromProfile(

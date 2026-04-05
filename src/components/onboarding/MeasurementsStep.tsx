@@ -3,22 +3,9 @@ import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Ruler, Weight } from "lucide-react";
 
-type UnitSystem = "imperial" | "metric";
-
-interface MeasurementsStepProps {
-  heightCm: string;
-  weightKg: string;
-  onHeightChange: (cm: string) => void;
-  onWeightChange: (kg: string) => void;
-  onNext: () => void;
-  slideIn: any;
-}
-
 const feetOptions = Array.from({ length: 5 }, (_, i) => i + 4); // 4–8
 const inchOptions = Array.from({ length: 12 }, (_, i) => i); // 0–11
-const cmOptions = Array.from({ length: 81 }, (_, i) => i + 140); // 140–220
 const lbsOptions = Array.from({ length: 251 }, (_, i) => i + 80); // 80–330
-const kgOptions = Array.from({ length: 121 }, (_, i) => i + 35); // 35–155
 
 function cmToFeetInches(cm: number) {
   const totalInches = Math.round(cm / 2.54);
@@ -32,6 +19,15 @@ function kgToLbs(kg: number) {
 }
 function lbsToKg(lbs: number) {
   return (lbs / 2.205).toFixed(1);
+}
+
+interface MeasurementsStepProps {
+  heightCm: string;
+  weightKg: string;
+  onHeightChange: (cm: string) => void;
+  onWeightChange: (kg: string) => void;
+  onNext: () => void;
+  slideIn: any;
 }
 
 const ScrollPicker = ({
@@ -77,10 +73,8 @@ const ScrollPicker = ({
     <div className="flex flex-col items-center gap-1">
       <span className="text-xs text-muted-foreground font-medium">{label}</span>
       <div className="relative h-[144px] w-20 overflow-hidden">
-        {/* Gradient masks */}
         <div className="pointer-events-none absolute inset-x-0 top-0 h-12 bg-gradient-to-b from-background to-transparent z-10" />
         <div className="pointer-events-none absolute inset-x-0 bottom-0 h-12 bg-gradient-to-t from-background to-transparent z-10" />
-        {/* Selection highlight */}
         <div className="absolute inset-x-1 top-1/2 -translate-y-1/2 h-12 rounded-lg bg-primary/10 border border-primary/20 z-[5]" />
         <div
           ref={containerRef}
@@ -108,8 +102,6 @@ const ScrollPicker = ({
 };
 
 const MeasurementsStep = ({ heightCm, weightKg, onHeightChange, onWeightChange, onNext, slideIn }: MeasurementsStepProps) => {
-  const [unitSystem, setUnitSystem] = useState<UnitSystem>("imperial");
-
   const currentCm = heightCm ? parseFloat(heightCm) : 165;
   const currentKg = weightKg ? parseFloat(weightKg) : 60;
 
@@ -122,14 +114,8 @@ const MeasurementsStep = ({ heightCm, weightKg, onHeightChange, onWeightChange, 
   const handleInchesChange = (i: number) => {
     onHeightChange(feetInchesToCm(feet, i));
   };
-  const handleCmChange = (cm: number) => {
-    onHeightChange(String(cm));
-  };
   const handleLbsChange = (lbs: number) => {
     onWeightChange(lbsToKg(lbs));
-  };
-  const handleKgChange = (kg: number) => {
-    onWeightChange(String(kg));
   };
 
   return (
@@ -139,30 +125,6 @@ const MeasurementsStep = ({ heightCm, weightKg, onHeightChange, onWeightChange, 
         <p className="text-sm text-muted-foreground mt-1">Helps us calculate calorie needs and track progress</p>
       </div>
 
-      {/* Unit toggle */}
-      <div className="flex items-center justify-center gap-1 p-1 bg-muted rounded-xl">
-        <button
-          onClick={() => setUnitSystem("imperial")}
-          className={`flex-1 py-2 px-4 rounded-lg text-sm font-display font-medium transition-all ${
-            unitSystem === "imperial"
-              ? "bg-card text-foreground shadow-sm"
-              : "text-muted-foreground hover:text-foreground"
-          }`}
-        >
-          ft / lbs
-        </button>
-        <button
-          onClick={() => setUnitSystem("metric")}
-          className={`flex-1 py-2 px-4 rounded-lg text-sm font-display font-medium transition-all ${
-            unitSystem === "metric"
-              ? "bg-card text-foreground shadow-sm"
-              : "text-muted-foreground hover:text-foreground"
-          }`}
-        >
-          cm / kg
-        </button>
-      </div>
-
       {/* Height */}
       <div>
         <div className="flex items-center gap-2 mb-3">
@@ -170,19 +132,11 @@ const MeasurementsStep = ({ heightCm, weightKg, onHeightChange, onWeightChange, 
           <span className="text-sm font-display font-semibold text-foreground">Height</span>
         </div>
         <div className="flex items-center justify-center gap-4 bg-card border border-border rounded-xl p-4">
-          {unitSystem === "imperial" ? (
-            <>
-              <ScrollPicker options={feetOptions} value={feet} onChange={handleFeetChange} label="feet" suffix="'" />
-              <ScrollPicker options={inchOptions} value={inches} onChange={handleInchesChange} label="inches" suffix='"' />
-            </>
-          ) : (
-            <ScrollPicker options={cmOptions} value={Math.round(currentCm)} onChange={handleCmChange} label="centimeters" suffix=" cm" />
-          )}
+          <ScrollPicker options={feetOptions} value={feet} onChange={handleFeetChange} label="feet" suffix="'" />
+          <ScrollPicker options={inchOptions} value={inches} onChange={handleInchesChange} label="inches" suffix='"' />
         </div>
         <p className="text-xs text-muted-foreground text-center mt-2">
-          {unitSystem === "imperial"
-            ? `${feet}'${inches}" (${currentCm.toFixed(0)} cm)`
-            : `${Math.round(currentCm)} cm (${feet}'${inches}")`}
+          {feet}'{inches}"
         </p>
       </div>
 
@@ -193,16 +147,10 @@ const MeasurementsStep = ({ heightCm, weightKg, onHeightChange, onWeightChange, 
           <span className="text-sm font-display font-semibold text-foreground">Weight</span>
         </div>
         <div className="flex items-center justify-center bg-card border border-border rounded-xl p-4">
-          {unitSystem === "imperial" ? (
-            <ScrollPicker options={lbsOptions} value={currentLbs} onChange={handleLbsChange} label="pounds" suffix=" lbs" />
-          ) : (
-            <ScrollPicker options={kgOptions} value={Math.round(currentKg)} onChange={handleKgChange} label="kilograms" suffix=" kg" />
-          )}
+          <ScrollPicker options={lbsOptions} value={currentLbs} onChange={handleLbsChange} label="pounds" suffix=" lbs" />
         </div>
         <p className="text-xs text-muted-foreground text-center mt-2">
-          {unitSystem === "imperial"
-            ? `${currentLbs} lbs (${currentKg.toFixed(1)} kg)`
-            : `${Math.round(currentKg)} kg (${kgToLbs(currentKg)} lbs)`}
+          {currentLbs} lbs
         </p>
       </div>
 
