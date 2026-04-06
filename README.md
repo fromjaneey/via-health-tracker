@@ -1,3 +1,3 @@
-# Welcome to your Lovable project
+# Women's Health Tracker (Menopuase)
 
-TODO: Document your project here
+TODO: refine app name, medications tab
