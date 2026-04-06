@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Moon, Droplets, Heart, TrendingUp, ChevronRight, Plus, X, Pill, Flame, Calendar as CalendarIcon, Trash2, BarChart3, Check } from "lucide-react";
+import { Moon, Droplets, Heart, TrendingUp, ChevronRight, Plus, X, Pill, Flame, Calendar as CalendarIcon, Trash2, BarChart3, Check, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import { format, subDays, startOfWeek, endOfWeek, eachDayOfInterval, startOfMonth, endOfMonth } from "date-fns";
@@ -17,29 +17,25 @@ const MENOPAUSE_SYMPTOMS = [
   "Insomnia", "Weight Gain", "Dryness", "Anxiety",
 ];
 
-const sleepHistory = [
-  { day: "Mon", score: 82, hours: 7.5 },
-  { day: "Tue", score: 68, hours: 6.2 },
-  { day: "Wed", score: 91, hours: 8.1 },
-  { day: "Thu", score: 75, hours: 7.0 },
-  { day: "Fri", score: 88, hours: 7.8 },
-  { day: "Sat", score: 95, hours: 8.5 },
-  { day: "Sun", score: 79, hours: 7.2 },
-];
-
 interface SymptomLog { id: string; symptom: string; intensity: number; notes: string | null; log_date: string; }
-interface Medication { id: string; name: string; amount: string; frequency: string; active: boolean; side_effects: string | null; }
+interface Medication { id: string; name: string; amount: string; start_date: string; end_date: string | null; active: boolean; side_effects: string | null; }
 interface MedicationLog { id: string; medication_id: string; log_date: string; taken: boolean; notes: string | null; }
+interface SideEffectLog { id: string; medication_id: string; side_effect: string; intensity: number; log_date: string; notes: string | null; }
 
 const CHART_COLORS = [
   "hsl(263, 70%, 66%)", "hsl(340, 82%, 70%)", "hsl(160, 60%, 40%)",
   "hsl(30, 90%, 60%)", "hsl(200, 70%, 55%)", "hsl(280, 60%, 55%)",
 ];
 
+const SIDE_EFFECT_COLORS = [
+  "hsl(0, 70%, 60%)", "hsl(25, 80%, 55%)", "hsl(50, 70%, 50%)",
+  "hsl(180, 60%, 45%)", "hsl(310, 60%, 55%)", "hsl(220, 60%, 60%)",
+];
+
 const HealthInsightsPage = () => {
   const { user } = useAuth();
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
-  const [activeSection, setActiveSection] = useState<"calendar" | "cycle" | "sleep">("calendar");
+  const [activeSection, setActiveSection] = useState<"calendar" | "cycle">("calendar");
   const [showTrends, setShowTrends] = useState(false);
   const [trendRange, setTrendRange] = useState<"week" | "month">("week");
 
@@ -63,10 +59,20 @@ const HealthInsightsPage = () => {
   const [showAddMed, setShowAddMed] = useState(false);
   const [medName, setMedName] = useState("");
   const [medAmount, setMedAmount] = useState("");
-  const [medFrequency, setMedFrequency] = useState("");
+  const [medStartDate, setMedStartDate] = useState(format(new Date(), "yyyy-MM-dd"));
+  const [medEndDate, setMedEndDate] = useState("");
   const [medSideEffects, setMedSideEffects] = useState("");
   const [loadingMeds, setLoadingMeds] = useState(false);
   const [medLogs, setMedLogs] = useState<MedicationLog[]>([]);
+
+  // Side effect logs
+  const [sideEffectLogs, setSideEffectLogs] = useState<SideEffectLog[]>([]);
+  const [allSideEffectLogs, setAllSideEffectLogs] = useState<SideEffectLog[]>([]);
+  const [showAddSideEffect, setShowAddSideEffect] = useState(false);
+  const [seMedId, setSeMedId] = useState("");
+  const [seName, setSeName] = useState("");
+  const [seIntensity, setSeIntensity] = useState(5);
+  const [seNotes, setSeNotes] = useState("");
 
   const [loggedDates, setLoggedDates] = useState<Set<string>>(new Set());
   const [medLogDates, setMedLogDates] = useState<Set<string>>(new Set());
@@ -91,7 +97,7 @@ const HealthInsightsPage = () => {
       });
   }, [user, symptoms]);
 
-  // Fetch medications + logs
+  // Fetch medications + logs + side effect logs
   useEffect(() => {
     if (!user) return;
     setLoadingMeds(true);
@@ -103,20 +109,36 @@ const HealthInsightsPage = () => {
       .then(({ data }) => {
         if (data) { setMedLogs(data as MedicationLog[]); setMedLogDates(new Set(data.map((d: any) => d.log_date))); }
       });
+
+    supabase.from("side_effect_logs").select("*").eq("user_id", user.id).gte("log_date", since).order("log_date", { ascending: true })
+      .then(({ data }) => { if (data) setAllSideEffectLogs(data as SideEffectLog[]); });
   }, [user]);
+
+  // Fetch side effects for selected date
+  useEffect(() => {
+    if (!user) return;
+    supabase.from("side_effect_logs").select("*").eq("user_id", user.id).eq("log_date", dateStr)
+      .then(({ data }) => { if (data) setSideEffectLogs(data as SideEffectLog[]); });
+  }, [user, dateStr]);
 
   const dayMedLogs = useMemo(() => medLogs.filter((l) => l.log_date === dateStr), [medLogs, dateStr]);
 
-  // Trend chart data
+  // Trend chart data — symptoms + side effects combined
   const trendData = useMemo(() => {
     const now = new Date();
     const range = trendRange === "week"
       ? eachDayOfInterval({ start: startOfWeek(now), end: endOfWeek(now) })
       : eachDayOfInterval({ start: startOfMonth(now), end: endOfMonth(now) });
+
     const symptomSet = new Set(allSymptoms.map((s) => s.symptom));
     const activeSymptoms = Array.from(symptomSet).slice(0, 6);
+
+    const seSet = new Set(allSideEffectLogs.map((s) => s.side_effect));
+    const activeSideEffects = Array.from(seSet).slice(0, 6);
+
     return {
       activeSymptoms,
+      activeSideEffects,
       data: range.map((date) => {
         const ds = format(date, "yyyy-MM-dd");
         const label = format(date, trendRange === "week" ? "EEE" : "d");
@@ -125,10 +147,15 @@ const HealthInsightsPage = () => {
           const match = allSymptoms.find((s) => s.log_date === ds && s.symptom === sym);
           entry[sym] = match ? match.intensity : null;
         });
+        activeSideEffects.forEach((se) => {
+          const key = `SE: ${se}`;
+          const match = allSideEffectLogs.find((s) => s.log_date === ds && s.side_effect === se);
+          entry[key] = match ? match.intensity : null;
+        });
         return entry;
       }),
     };
-  }, [allSymptoms, trendRange]);
+  }, [allSymptoms, allSideEffectLogs, trendRange]);
 
   const handleAddSymptom = async () => {
     if (!user || !selectedSymptom) return;
@@ -146,11 +173,15 @@ const HealthInsightsPage = () => {
   };
 
   const handleAddMedication = async () => {
-    if (!user || !medName || !medAmount || !medFrequency) return;
-    const { data, error } = await supabase.from("medications").insert({ user_id: user.id, name: medName, amount: medAmount, frequency: medFrequency, side_effects: medSideEffects || null }).select().single();
+    if (!user || !medName || !medAmount || !medStartDate) return;
+    const { data, error } = await supabase.from("medications").insert({
+      user_id: user.id, name: medName, amount: medAmount,
+      start_date: medStartDate, end_date: medEndDate || null,
+      side_effects: medSideEffects || null
+    }).select().single();
     if (error) { toast.error("Failed to add medication"); return; }
     setMedications((prev) => [...prev, data as Medication]);
-    setShowAddMed(false); setMedName(""); setMedAmount(""); setMedFrequency(""); setMedSideEffects("");
+    setShowAddMed(false); setMedName(""); setMedAmount(""); setMedStartDate(format(new Date(), "yyyy-MM-dd")); setMedEndDate(""); setMedSideEffects("");
     toast.success("Medication added!");
   };
 
@@ -172,6 +203,26 @@ const HealthInsightsPage = () => {
     }
   };
 
+  const handleAddSideEffect = async () => {
+    if (!user || !seMedId || !seName) return;
+    const { data, error } = await supabase.from("side_effect_logs").insert({
+      user_id: user.id, medication_id: seMedId, side_effect: seName,
+      intensity: seIntensity, log_date: dateStr, notes: seNotes || null
+    }).select().single();
+    if (error) { toast.error("Failed to log side effect"); return; }
+    setSideEffectLogs((prev) => [...prev, data as SideEffectLog]);
+    setAllSideEffectLogs((prev) => [...prev, data as SideEffectLog]);
+    setShowAddSideEffect(false); setSeMedId(""); setSeName(""); setSeIntensity(5); setSeNotes("");
+    toast.success("Side effect logged!");
+  };
+
+  const handleDeleteSideEffect = async (id: string) => {
+    await supabase.from("side_effect_logs").delete().eq("id", id);
+    setSideEffectLogs((prev) => prev.filter((s) => s.id !== id));
+    setAllSideEffectLogs((prev) => prev.filter((s) => s.id !== id));
+    toast.success("Side effect removed");
+  };
+
   const handleAddPeriod = async () => {
     if (!periodStart) return;
     const { error } = await addPeriod(periodStart, periodEnd || null);
@@ -183,6 +234,8 @@ const HealthInsightsPage = () => {
   const getIntensityColor = (val: number) => val <= 3 ? "text-success" : val <= 6 ? "text-primary" : "text-accent";
   const getIntensityBg = (val: number) => val <= 3 ? "bg-success/10" : val <= 6 ? "bg-primary/10" : "bg-accent/10";
 
+  const getMedName = (medId: string) => medications.find((m) => m.id === medId)?.name ?? "Medication";
+
   return (
     <div className="px-4 pt-6 pb-24 max-w-lg mx-auto space-y-5">
       <h1 className="text-xl font-display font-semibold text-foreground">Health Insights</h1>
@@ -192,7 +245,6 @@ const HealthInsightsPage = () => {
         {([
           { key: "calendar", icon: CalendarIcon, label: "Menopause" },
           { key: "cycle", icon: Droplets, label: "Cycle" },
-          // { key: "sleep", icon: Moon, label: "Sleep" }, // Hidden for now
         ] as const).map(({ key, icon: Icon, label }) => (
           <button key={key} onClick={() => setActiveSection(key)}
             className={`flex-1 py-2 text-xs font-display font-medium rounded-lg transition-all flex items-center justify-center gap-1.5 ${activeSection === key ? "bg-background text-foreground shadow-sm" : "text-muted-foreground"}`}>
@@ -205,7 +257,7 @@ const HealthInsightsPage = () => {
         {/* ===== MENOPAUSE CALENDAR ===== */}
         {activeSection === "calendar" && (
           <motion.div key="calendar" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="space-y-4">
-            {/* Calendar with period + symptom + med indicators */}
+            {/* Calendar */}
             <div className="bg-card rounded-2xl border border-border p-4">
               <Calendar
                 mode="single"
@@ -230,11 +282,11 @@ const HealthInsightsPage = () => {
               </div>
             </div>
 
-            {/* Trend Chart */}
+            {/* Trend Chart — symptoms + side effects */}
             <div className="bg-card rounded-2xl border border-border p-5">
               <div className="flex items-center justify-between mb-3">
                 <h3 className="font-display font-semibold text-foreground flex items-center gap-2">
-                  <BarChart3 className="w-4 h-4 text-primary" /> Symptom Trends
+                  <BarChart3 className="w-4 h-4 text-primary" /> Symptom & Side Effect Trends
                 </h3>
                 <button onClick={() => setShowTrends(!showTrends)} className="text-xs text-primary flex items-center gap-1">
                   {showTrends ? "Hide" : "Show"} <ChevronRight className={`w-3.5 h-3.5 transition-transform ${showTrends ? "rotate-90" : ""}`} />
@@ -250,8 +302,8 @@ const HealthInsightsPage = () => {
                         </button>
                       ))}
                     </div>
-                    {trendData.activeSymptoms.length === 0 ? (
-                      <p className="text-xs text-muted-foreground text-center py-8">Log symptoms to see trends</p>
+                    {trendData.activeSymptoms.length === 0 && trendData.activeSideEffects.length === 0 ? (
+                      <p className="text-xs text-muted-foreground text-center py-8">Log symptoms or side effects to see trends</p>
                     ) : (
                       <>
                         <ResponsiveContainer width="100%" height={180}>
@@ -263,12 +315,20 @@ const HealthInsightsPage = () => {
                             {trendData.activeSymptoms.map((sym, i) => (
                               <Line key={sym} type="monotone" dataKey={sym} stroke={CHART_COLORS[i % CHART_COLORS.length]} strokeWidth={2} dot={{ r: 3 }} connectNulls />
                             ))}
+                            {trendData.activeSideEffects.map((se, i) => (
+                              <Line key={`SE: ${se}`} type="monotone" dataKey={`SE: ${se}`} stroke={SIDE_EFFECT_COLORS[i % SIDE_EFFECT_COLORS.length]} strokeWidth={2} strokeDasharray="5 3" dot={{ r: 3 }} connectNulls />
+                            ))}
                           </LineChart>
                         </ResponsiveContainer>
                         <div className="flex flex-wrap gap-2 mt-3">
                           {trendData.activeSymptoms.map((sym, i) => (
                             <span key={sym} className="flex items-center gap-1 text-[10px] text-muted-foreground">
                               <span className="w-2 h-2 rounded-full" style={{ background: CHART_COLORS[i % CHART_COLORS.length] }} />{sym}
+                            </span>
+                          ))}
+                          {trendData.activeSideEffects.map((se, i) => (
+                            <span key={se} className="flex items-center gap-1 text-[10px] text-muted-foreground">
+                              <span className="w-2 h-2 rounded-full border border-current" style={{ background: SIDE_EFFECT_COLORS[i % SIDE_EFFECT_COLORS.length] }} />SE: {se}
                             </span>
                           ))}
                         </div>
@@ -341,6 +401,72 @@ const HealthInsightsPage = () => {
               </AnimatePresence>
             </div>
 
+            {/* Side Effects for selected date */}
+            <div className="bg-card rounded-2xl border border-border p-5">
+              <div className="flex items-center justify-between mb-4">
+                <div>
+                  <h3 className="font-display font-semibold text-foreground flex items-center gap-2"><AlertTriangle className="w-4 h-4 text-accent" /> Side Effects</h3>
+                  <p className="text-xs text-muted-foreground mt-0.5">{format(selectedDate, "MMMM d, yyyy")}</p>
+                </div>
+                <Button variant="outline" size="sm" className="h-8 text-xs font-display" onClick={() => { setShowAddSideEffect(true); if (medications.length > 0 && !seMedId) setSeMedId(medications[0].id); }}>
+                  <Plus className="w-3.5 h-3.5 mr-1" /> Log
+                </Button>
+              </div>
+              {sideEffectLogs.length === 0 ? (
+                <p className="text-xs text-muted-foreground text-center py-6">No side effects logged for this day</p>
+              ) : (
+                <div className="space-y-2">
+                  {sideEffectLogs.map((s) => (
+                    <motion.div key={s.id} initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} className={`flex items-center justify-between p-3 rounded-xl ${getIntensityBg(s.intensity)}`}>
+                      <div className="flex-1">
+                        <p className="text-sm font-display font-medium text-foreground">{s.side_effect}</p>
+                        <p className="text-[10px] text-muted-foreground">{getMedName(s.medication_id)}</p>
+                        {s.notes && <p className="text-xs text-muted-foreground mt-0.5">{s.notes}</p>}
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <span className={`text-lg font-display font-bold ${getIntensityColor(s.intensity)}`}>{s.intensity}</span>
+                        <button onClick={() => handleDeleteSideEffect(s.id)} className="text-muted-foreground hover:text-destructive transition-colors"><Trash2 className="w-3.5 h-3.5" /></button>
+                      </div>
+                    </motion.div>
+                  ))}
+                </div>
+              )}
+              <AnimatePresence>
+                {showAddSideEffect && (
+                  <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }} className="mt-4 pt-4 border-t border-border overflow-hidden space-y-3">
+                    <div className="flex items-center justify-between mb-1">
+                      <p className="text-sm font-display font-semibold text-foreground">Log Side Effect</p>
+                      <button onClick={() => setShowAddSideEffect(false)} className="text-muted-foreground"><X className="w-4 h-4" /></button>
+                    </div>
+                    {medications.length === 0 ? (
+                      <p className="text-xs text-muted-foreground text-center py-4">Add a medication first to log side effects</p>
+                    ) : (
+                      <>
+                        <div>
+                          <label className="text-xs text-muted-foreground mb-1 block">Medication</label>
+                          <select value={seMedId} onChange={(e) => setSeMedId(e.target.value)}
+                            className="w-full h-10 px-3 rounded-xl border border-border bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring">
+                            {medications.map((m) => <option key={m.id} value={m.id}>{m.name} ({m.amount})</option>)}
+                          </select>
+                        </div>
+                        <input value={seName} onChange={(e) => setSeName(e.target.value)} placeholder="Side effect name (e.g. Nausea)" className="w-full h-10 px-3 rounded-xl border border-border bg-background text-foreground placeholder:text-muted-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring" />
+                        <div>
+                          <div className="flex justify-between items-center mb-2">
+                            <p className="text-xs text-muted-foreground">Intensity</p>
+                            <span className={`text-xl font-display font-bold ${getIntensityColor(seIntensity)}`}>{seIntensity}</span>
+                          </div>
+                          <Slider value={[seIntensity]} onValueChange={([v]) => setSeIntensity(v)} min={1} max={10} step={1} className="w-full" />
+                          <div className="flex justify-between text-[10px] text-muted-foreground mt-1"><span>1 — Mild</span><span>10 — Severe</span></div>
+                        </div>
+                        <textarea value={seNotes} onChange={(e) => setSeNotes(e.target.value)} placeholder="Notes (optional)" className="w-full h-16 px-3 py-2 rounded-xl border border-border bg-background text-foreground placeholder:text-muted-foreground text-xs resize-none focus:outline-none focus:ring-2 focus:ring-ring" />
+                        <Button onClick={handleAddSideEffect} className="w-full h-10 font-display text-sm" disabled={!seName || !seMedId}>Log Side Effect</Button>
+                      </>
+                    )}
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+
             {/* Medications */}
             <div className="bg-card rounded-2xl border border-border p-5">
               <div className="flex items-center justify-between mb-4">
@@ -360,7 +486,7 @@ const HealthInsightsPage = () => {
                           </div>
                           <div className="flex-1">
                             <p className={`text-sm font-display font-medium ${taken ? "text-muted-foreground line-through" : "text-foreground"}`}>{m.name}</p>
-                            <p className="text-xs text-muted-foreground">{m.amount} · {m.frequency}</p>
+                            <p className="text-xs text-muted-foreground">{m.amount}</p>
                           </div>
                         </button>
                       );
@@ -379,13 +505,16 @@ const HealthInsightsPage = () => {
                       <div className="flex items-center justify-between">
                         <div>
                           <p className="text-sm font-display font-medium text-foreground">{m.name}</p>
-                          <p className="text-xs text-muted-foreground">{m.amount} · {m.frequency}</p>
+                          <p className="text-xs text-muted-foreground">
+                            {m.amount} · Started {format(new Date(m.start_date + "T00:00:00"), "MMM d, yyyy")}
+                            {m.end_date && ` · Ended ${format(new Date(m.end_date + "T00:00:00"), "MMM d, yyyy")}`}
+                          </p>
                         </div>
                         <button onClick={() => handleDeleteMedication(m.id)} className="text-muted-foreground hover:text-destructive transition-colors"><Trash2 className="w-3.5 h-3.5" /></button>
                       </div>
                       {m.side_effects && (
                         <div className="mt-2 pt-2 border-t border-border/50">
-                          <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-medium">Side Effects</p>
+                          <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-medium">Known Side Effects</p>
                           <p className="text-xs text-foreground/80 mt-0.5">{m.side_effects}</p>
                         </div>
                       )}
@@ -401,12 +530,21 @@ const HealthInsightsPage = () => {
                       <button onClick={() => setShowAddMed(false)} className="text-muted-foreground"><X className="w-4 h-4" /></button>
                     </div>
                     <input value={medName} onChange={(e) => setMedName(e.target.value)} placeholder="Medication name" className="w-full h-10 px-3 rounded-xl border border-border bg-background text-foreground placeholder:text-muted-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring" />
+                    <input value={medAmount} onChange={(e) => setMedAmount(e.target.value)} placeholder="Amount (e.g. 50mg)" className="w-full h-10 px-3 rounded-xl border border-border bg-background text-foreground placeholder:text-muted-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring" />
                     <div className="grid grid-cols-2 gap-2">
-                      <input value={medAmount} onChange={(e) => setMedAmount(e.target.value)} placeholder="Amount (e.g. 50mg)" className="h-10 px-3 rounded-xl border border-border bg-background text-foreground placeholder:text-muted-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring" />
-                      <input value={medFrequency} onChange={(e) => setMedFrequency(e.target.value)} placeholder="Frequency (e.g. Daily)" className="h-10 px-3 rounded-xl border border-border bg-background text-foreground placeholder:text-muted-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring" />
+                      <div>
+                        <label className="text-xs text-muted-foreground mb-1 block">Start Date *</label>
+                        <input type="date" value={medStartDate} onChange={(e) => setMedStartDate(e.target.value)}
+                          className="w-full h-10 px-3 rounded-xl border border-border bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring" />
+                      </div>
+                      <div>
+                        <label className="text-xs text-muted-foreground mb-1 block">End Date</label>
+                        <input type="date" value={medEndDate} onChange={(e) => setMedEndDate(e.target.value)}
+                          className="w-full h-10 px-3 rounded-xl border border-border bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring" />
+                      </div>
                     </div>
-                    <textarea value={medSideEffects} onChange={(e) => setMedSideEffects(e.target.value)} placeholder="Side effects (optional) — e.g. nausea, headaches, dizziness" className="w-full h-16 px-3 py-2 rounded-xl border border-border bg-background text-foreground placeholder:text-muted-foreground text-xs resize-none focus:outline-none focus:ring-2 focus:ring-ring" />
-                    <Button onClick={handleAddMedication} className="w-full h-10 font-display text-sm" disabled={!medName || !medAmount || !medFrequency}>Add Medication</Button>
+                    <textarea value={medSideEffects} onChange={(e) => setMedSideEffects(e.target.value)} placeholder="Known side effects (optional) — e.g. nausea, headaches" className="w-full h-16 px-3 py-2 rounded-xl border border-border bg-background text-foreground placeholder:text-muted-foreground text-xs resize-none focus:outline-none focus:ring-2 focus:ring-ring" />
+                    <Button onClick={handleAddMedication} className="w-full h-10 font-display text-sm" disabled={!medName || !medAmount || !medStartDate}>Add Medication</Button>
                   </motion.div>
                 )}
               </AnimatePresence>
@@ -417,7 +555,6 @@ const HealthInsightsPage = () => {
         {/* ===== CYCLE SECTION ===== */}
         {activeSection === "cycle" && (
           <motion.div key="cycle" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="space-y-4">
-            {/* Cycle Calendar */}
             <div className="bg-card rounded-2xl border border-border p-4">
               <Calendar
                 mode="single"
@@ -432,7 +569,6 @@ const HealthInsightsPage = () => {
               </div>
             </div>
 
-            {/* Current Phase Info */}
             <div className="bg-card rounded-2xl p-5 border border-border">
               <div className="flex items-center gap-2 mb-4">
                 <div className="w-8 h-8 rounded-lg bg-accent/10 flex items-center justify-center">
@@ -443,7 +579,6 @@ const HealthInsightsPage = () => {
 
               {cycleInfo.currentDay ? (
                 <>
-                  {/* Cycle bar */}
                   <div className="relative h-8 rounded-full overflow-hidden bg-muted mb-3">
                     <div className="absolute top-0 h-full gradient-rose opacity-80" style={{ left: "0%", width: `${(5 / cycleInfo.cycleLength) * 100}%` }} />
                     <div className="absolute top-0 h-full gradient-primary opacity-80" style={{ left: `${(5 / cycleInfo.cycleLength) * 100}%`, width: `${(8 / cycleInfo.cycleLength) * 100}%` }} />
@@ -462,7 +597,6 @@ const HealthInsightsPage = () => {
                     </div>
                   </div>
 
-                  {/* Training recommendations */}
                   {recommendations && (
                     <div className="bg-primary/5 rounded-xl p-3 space-y-1.5">
                       <p className="text-xs font-display font-semibold text-primary">{recommendations.title}</p>
@@ -478,7 +612,6 @@ const HealthInsightsPage = () => {
               )}
             </div>
 
-            {/* Log / Edit Periods */}
             <div className="bg-card rounded-2xl p-5 border border-border">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="font-display font-semibold text-foreground">Period History</h3>
@@ -535,44 +668,6 @@ const HealthInsightsPage = () => {
                   </motion.div>
                 )}
               </AnimatePresence>
-            </div>
-          </motion.div>
-        )}
-
-        {/* ===== SLEEP SECTION ===== */}
-        {activeSection === "sleep" && (
-          <motion.div key="sleep" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="space-y-4">
-            <div className="bg-card rounded-2xl p-5 border border-border">
-              <div className="flex items-center gap-2 mb-4">
-                <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center"><Moon className="w-4 h-4 text-primary" /></div>
-                <h3 className="font-display font-semibold text-foreground">Sleep Score</h3>
-                <span className="ml-auto text-2xl font-display font-semibold text-foreground">82</span>
-              </div>
-              <div className="flex items-end gap-2 h-24 mb-3">
-                {sleepHistory.map((day, i) => {
-                  const height = (day.score / 100) * 100;
-                  const color = day.score >= 80 ? "gradient-primary" : day.score >= 60 ? "bg-primary/40" : "bg-muted-foreground/30";
-                  return (
-                    <div key={i} className="flex-1 flex flex-col items-center gap-1">
-                      <motion.div initial={{ height: 0 }} animate={{ height: `${height}%` }} transition={{ delay: i * 0.05, duration: 0.4 }} className={`w-full rounded-t-md ${color}`} />
-                      <span className="text-[10px] text-muted-foreground">{day.day}</span>
-                    </div>
-                  );
-                })}
-              </div>
-              <div className="flex justify-between text-xs text-muted-foreground"><span>Avg: 7.5 hrs</span><span>Best: 8.5 hrs (Sat)</span></div>
-            </div>
-            <div className="grid grid-cols-2 gap-3">
-              <div className="bg-card rounded-2xl p-4 border border-border">
-                <Heart className="w-4 h-4 text-accent mb-2" />
-                <p className="text-xs text-muted-foreground">Resting HR</p>
-                <p className="text-xl font-display font-semibold text-foreground">62 <span className="text-xs font-body text-muted-foreground">bpm</span></p>
-              </div>
-              <div className="bg-card rounded-2xl p-4 border border-border">
-                <TrendingUp className="w-4 h-4 text-success mb-2" />
-                <p className="text-xs text-muted-foreground">Recovery</p>
-                <p className="text-xl font-display font-semibold text-foreground">85<span className="text-xs font-body text-muted-foreground">%</span></p>
-              </div>
             </div>
           </motion.div>
         )}

@@ -30,7 +30,7 @@ interface MedicationLogRecord {
   log_date: string;
   taken: boolean;
   medication_id: string;
-  medications?: { name: string; amount: string } | null;
+  medications?: { name: string; amount: string; start_date?: string } | null;
 }
 
 interface PeriodRecord {
