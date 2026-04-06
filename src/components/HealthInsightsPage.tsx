@@ -234,7 +234,7 @@ const HealthInsightsPage = () => {
   const getIntensityColor = (val: number) => val <= 3 ? "text-success" : val <= 6 ? "text-primary" : "text-accent";
   const getIntensityBg = (val: number) => val <= 3 ? "bg-success/10" : val <= 6 ? "bg-primary/10" : "bg-accent/10";
 
-  const getMedName = (medId: string) => medications.find((m) => m.id === medId)?.name ?? "Medication";
+
 
   return (
     <div className="px-4 pt-6 pb-24 max-w-lg mx-auto space-y-5">
