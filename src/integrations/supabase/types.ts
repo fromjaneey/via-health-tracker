@@ -84,30 +84,33 @@ export type Database = {
           active: boolean
           amount: string
           created_at: string
-          frequency: string
+          end_date: string | null
           id: string
           name: string
           side_effects: string | null
+          start_date: string
           user_id: string
         }
         Insert: {
           active?: boolean
           amount: string
           created_at?: string
-          frequency: string
+          end_date?: string | null
           id?: string
           name: string
           side_effects?: string | null
+          start_date?: string
           user_id: string
         }
         Update: {
           active?: boolean
           amount?: string
           created_at?: string
-          frequency?: string
+          end_date?: string | null
           id?: string
           name?: string
           side_effects?: string | null
+          start_date?: string
           user_id?: string
         }
         Relationships: []
@@ -192,6 +195,47 @@ export type Database = {
           workout_frequency?: number | null
         }
         Relationships: []
+      }
+      side_effect_logs: {
+        Row: {
+          created_at: string
+          id: string
+          intensity: number
+          log_date: string
+          medication_id: string
+          notes: string | null
+          side_effect: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          intensity: number
+          log_date?: string
+          medication_id: string
+          notes?: string | null
+          side_effect: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          intensity?: number
+          log_date?: string
+          medication_id?: string
+          notes?: string | null
+          side_effect?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "side_effect_logs_medication_id_fkey"
+            columns: ["medication_id"]
+            isOneToOne: false
+            referencedRelation: "medications"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       workout_history: {
         Row: {
