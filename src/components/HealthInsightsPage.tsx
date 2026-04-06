@@ -401,73 +401,7 @@ const HealthInsightsPage = () => {
               </AnimatePresence>
             </div>
 
-            {/* Side Effects for selected date */}
-            <div className="bg-card rounded-2xl border border-border p-5">
-              <div className="flex items-center justify-between mb-4">
-                <div>
-                  <h3 className="font-display font-semibold text-foreground flex items-center gap-2"><AlertTriangle className="w-4 h-4 text-accent" /> Side Effects</h3>
-                  <p className="text-xs text-muted-foreground mt-0.5">{format(selectedDate, "MMMM d, yyyy")}</p>
-                </div>
-                <Button variant="outline" size="sm" className="h-8 text-xs font-display" onClick={() => { setShowAddSideEffect(true); if (medications.length > 0 && !seMedId) setSeMedId(medications[0].id); }}>
-                  <Plus className="w-3.5 h-3.5 mr-1" /> Log
-                </Button>
-              </div>
-              {sideEffectLogs.length === 0 ? (
-                <p className="text-xs text-muted-foreground text-center py-6">No side effects logged for this day</p>
-              ) : (
-                <div className="space-y-2">
-                  {sideEffectLogs.map((s) => (
-                    <motion.div key={s.id} initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} className={`flex items-center justify-between p-3 rounded-xl ${getIntensityBg(s.intensity)}`}>
-                      <div className="flex-1">
-                        <p className="text-sm font-display font-medium text-foreground">{s.side_effect}</p>
-                        <p className="text-[10px] text-muted-foreground">{getMedName(s.medication_id)}</p>
-                        {s.notes && <p className="text-xs text-muted-foreground mt-0.5">{s.notes}</p>}
-                      </div>
-                      <div className="flex items-center gap-3">
-                        <span className={`text-lg font-display font-bold ${getIntensityColor(s.intensity)}`}>{s.intensity}</span>
-                        <button onClick={() => handleDeleteSideEffect(s.id)} className="text-muted-foreground hover:text-destructive transition-colors"><Trash2 className="w-3.5 h-3.5" /></button>
-                      </div>
-                    </motion.div>
-                  ))}
-                </div>
-              )}
-              <AnimatePresence>
-                {showAddSideEffect && (
-                  <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }} className="mt-4 pt-4 border-t border-border overflow-hidden space-y-3">
-                    <div className="flex items-center justify-between mb-1">
-                      <p className="text-sm font-display font-semibold text-foreground">Log Side Effect</p>
-                      <button onClick={() => setShowAddSideEffect(false)} className="text-muted-foreground"><X className="w-4 h-4" /></button>
-                    </div>
-                    {medications.length === 0 ? (
-                      <p className="text-xs text-muted-foreground text-center py-4">Add a medication first to log side effects</p>
-                    ) : (
-                      <>
-                        <div>
-                          <label className="text-xs text-muted-foreground mb-1 block">Medication</label>
-                          <select value={seMedId} onChange={(e) => setSeMedId(e.target.value)}
-                            className="w-full h-10 px-3 rounded-xl border border-border bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring">
-                            {medications.map((m) => <option key={m.id} value={m.id}>{m.name} ({m.amount})</option>)}
-                          </select>
-                        </div>
-                        <input value={seName} onChange={(e) => setSeName(e.target.value)} placeholder="Side effect name (e.g. Nausea)" className="w-full h-10 px-3 rounded-xl border border-border bg-background text-foreground placeholder:text-muted-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring" />
-                        <div>
-                          <div className="flex justify-between items-center mb-2">
-                            <p className="text-xs text-muted-foreground">Intensity</p>
-                            <span className={`text-xl font-display font-bold ${getIntensityColor(seIntensity)}`}>{seIntensity}</span>
-                          </div>
-                          <Slider value={[seIntensity]} onValueChange={([v]) => setSeIntensity(v)} min={1} max={10} step={1} className="w-full" />
-                          <div className="flex justify-between text-[10px] text-muted-foreground mt-1"><span>1 — Mild</span><span>10 — Severe</span></div>
-                        </div>
-                        <textarea value={seNotes} onChange={(e) => setSeNotes(e.target.value)} placeholder="Notes (optional)" className="w-full h-16 px-3 py-2 rounded-xl border border-border bg-background text-foreground placeholder:text-muted-foreground text-xs resize-none focus:outline-none focus:ring-2 focus:ring-ring" />
-                        <Button onClick={handleAddSideEffect} className="w-full h-10 font-display text-sm" disabled={!seName || !seMedId}>Log Side Effect</Button>
-                      </>
-                    )}
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </div>
-
-            {/* Medications */}
+            {/* Medications with inline side effects */}
             <div className="bg-card rounded-2xl border border-border p-5">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="font-display font-semibold text-foreground flex items-center gap-2"><Pill className="w-4 h-4 text-primary" /> Medications</h3>
@@ -499,27 +433,77 @@ const HealthInsightsPage = () => {
               ) : medications.length === 0 ? (
                 <p className="text-xs text-muted-foreground text-center py-4">No medications added yet</p>
               ) : (
-                <div className="space-y-2">
-                  {medications.map((m) => (
-                    <div key={m.id} className="p-3 rounded-xl bg-primary/5">
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <p className="text-sm font-display font-medium text-foreground">{m.name}</p>
-                          <p className="text-xs text-muted-foreground">
-                            {m.amount} · Started {format(new Date(m.start_date + "T00:00:00"), "MMM d, yyyy")}
-                            {m.end_date && ` · Ended ${format(new Date(m.end_date + "T00:00:00"), "MMM d, yyyy")}`}
-                          </p>
+                <div className="space-y-3">
+                  {medications.map((m) => {
+                    const medSE = sideEffectLogs.filter((s) => s.medication_id === m.id);
+                    const isAddingSE = showAddSideEffect && seMedId === m.id;
+                    return (
+                      <div key={m.id} className="p-3 rounded-xl bg-primary/5">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <p className="text-sm font-display font-medium text-foreground">{m.name}</p>
+                            <p className="text-xs text-muted-foreground">
+                              {m.amount} · Started {format(new Date(m.start_date + "T00:00:00"), "MMM d, yyyy")}
+                              {m.end_date && ` · Ended ${format(new Date(m.end_date + "T00:00:00"), "MMM d, yyyy")}`}
+                            </p>
+                          </div>
+                          <button onClick={() => handleDeleteMedication(m.id)} className="text-muted-foreground hover:text-destructive transition-colors"><Trash2 className="w-3.5 h-3.5" /></button>
                         </div>
-                        <button onClick={() => handleDeleteMedication(m.id)} className="text-muted-foreground hover:text-destructive transition-colors"><Trash2 className="w-3.5 h-3.5" /></button>
-                      </div>
-                      {m.side_effects && (
+                        {m.side_effects && (
+                          <div className="mt-2 pt-2 border-t border-border/50">
+                            <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-medium">Known Side Effects</p>
+                            <p className="text-xs text-foreground/80 mt-0.5">{m.side_effects}</p>
+                          </div>
+                        )}
+
+                        {/* Inline side effect logs for this medication */}
                         <div className="mt-2 pt-2 border-t border-border/50">
-                          <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-medium">Known Side Effects</p>
-                          <p className="text-xs text-foreground/80 mt-0.5">{m.side_effects}</p>
+                          <div className="flex items-center justify-between mb-1.5">
+                            <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-medium flex items-center gap-1">
+                              <AlertTriangle className="w-3 h-3" /> Side Effects — {format(selectedDate, "MMM d")}
+                            </p>
+                            <button onClick={() => { setShowAddSideEffect(!isAddingSE); setSeMedId(m.id); setSeName(""); setSeIntensity(5); setSeNotes(""); }}
+                              className="text-xs text-primary flex items-center gap-0.5">
+                              <Plus className="w-3 h-3" /> Log
+                            </button>
+                          </div>
+                          {medSE.length > 0 && (
+                            <div className="space-y-1.5 mb-2">
+                              {medSE.map((s) => (
+                                <div key={s.id} className={`flex items-center justify-between p-2 rounded-lg ${getIntensityBg(s.intensity)}`}>
+                                  <div className="flex-1">
+                                    <p className="text-xs font-display font-medium text-foreground">{s.side_effect}</p>
+                                    {s.notes && <p className="text-[10px] text-muted-foreground">{s.notes}</p>}
+                                  </div>
+                                  <div className="flex items-center gap-2">
+                                    <span className={`text-sm font-display font-bold ${getIntensityColor(s.intensity)}`}>{s.intensity}</span>
+                                    <button onClick={() => handleDeleteSideEffect(s.id)} className="text-muted-foreground hover:text-destructive transition-colors"><Trash2 className="w-3 h-3" /></button>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                          <AnimatePresence>
+                            {isAddingSE && (
+                              <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }} className="overflow-hidden space-y-2 pt-1">
+                                <input value={seName} onChange={(e) => setSeName(e.target.value)} placeholder="Side effect (e.g. Nausea)" className="w-full h-9 px-3 rounded-lg border border-border bg-background text-foreground placeholder:text-muted-foreground text-xs focus:outline-none focus:ring-2 focus:ring-ring" />
+                                <div>
+                                  <div className="flex justify-between items-center mb-1">
+                                    <p className="text-[10px] text-muted-foreground">Intensity</p>
+                                    <span className={`text-sm font-display font-bold ${getIntensityColor(seIntensity)}`}>{seIntensity}</span>
+                                  </div>
+                                  <Slider value={[seIntensity]} onValueChange={([v]) => setSeIntensity(v)} min={1} max={10} step={1} className="w-full" />
+                                  <div className="flex justify-between text-[9px] text-muted-foreground mt-0.5"><span>1 — Mild</span><span>10 — Severe</span></div>
+                                </div>
+                                <textarea value={seNotes} onChange={(e) => setSeNotes(e.target.value)} placeholder="Notes (optional)" className="w-full h-12 px-3 py-1.5 rounded-lg border border-border bg-background text-foreground placeholder:text-muted-foreground text-[10px] resize-none focus:outline-none focus:ring-2 focus:ring-ring" />
+                                <Button onClick={handleAddSideEffect} size="sm" className="w-full h-8 font-display text-xs" disabled={!seName}>Log Side Effect</Button>
+                              </motion.div>
+                            )}
+                          </AnimatePresence>
                         </div>
-                      )}
-                    </div>
-                  ))}
+                      </div>
+                    );
+                  })}
                 </div>
               )}
               <AnimatePresence>
